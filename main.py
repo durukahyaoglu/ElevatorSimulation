@@ -1,5 +1,6 @@
 import csv
 import statistics
+import sys
 from pathlib import Path
 from fpdf import FPDF
 
@@ -339,6 +340,7 @@ def run_scenario_with_scheduler(scenario: dict, scheduler: str, requests: list[R
 
 
 def main():
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     OUTPUT_DIR.mkdir(exist_ok=True)
 
     schedulers  = ["nearest_car", "round_robin", "zone_based"]
@@ -368,7 +370,7 @@ def main():
             stats_path = OUTPUT_DIR / f"{name}_{scheduler}_stats.txt"
 
             write_elevator_log(log, log_path)
-            stats_path.write_text(stats)
+            stats_path.write_text(stats, encoding="utf-8")
             print(f"\n{stats}")
             print(f"\n    Elevator log → {log_path.name}")
             print(f"    Stats        → {stats_path.name}")
