@@ -1,0 +1,36 @@
+====================================================
+  Edge case — 8 passengers arrive at t=0, elevators hold only 2 each
+====================================================
+  Total requests : 8
+  Completed      : 4
+  Still waiting  : 0
+  In transit     : 4
+
+  Wait time   (request → board)
+    Min : 0 ticks
+    Max : 0 ticks
+    Avg : 0.0 ticks
+    Std : 0.0 ticks
+
+  Travel time (board → alight)
+    Min : 18 ticks
+    Max : 48 ticks
+    Avg : 33.0 ticks
+    Std : 12.9 ticks
+
+  Total time  (request → alight)
+    Min : 18 ticks
+    Max : 48 ticks
+    Avg : 33.0 ticks
+    Std : 12.9 ticks
+
+  Notable observations:
+    Longest wait  : passenger1 waited 0 ticks at floor 1
+    Longest trip  : passenger1 took 48 ticks total
+    Shortest trip : passenger4 took 18 ticks total
+    Unfinished    : passenger5, passenger6, passenger7, passenger8 did not complete journey within 100 ticks
+
+  Elevator usage:
+    E0 : 4 passenger(s) [passenger1, passenger3, passenger6, passenger8]  |  101 floors traveled  |  100% utilization
+    E1 : 4 passenger(s) [passenger2, passenger4, passenger5, passenger7]  |  101 floors traveled  |  100% utilization
+====================================================

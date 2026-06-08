@@ -1,0 +1,35 @@
+====================================================
+  Standard case — 2 elevators, staggered arrivals
+====================================================
+  Total requests : 3
+  Completed      : 3
+  Still waiting  : 0
+  In transit     : 0
+
+  Wait time   (request → board)
+    Min : 0 ticks
+    Max : 8 ticks
+    Avg : 2.7 ticks
+    Std : 4.6 ticks
+
+  Travel time (board → alight)
+    Min : 35 ticks
+    Max : 81 ticks
+    Avg : 55.0 ticks
+    Std : 23.6 ticks
+
+  Total time  (request → alight)
+    Min : 35 ticks
+    Max : 89 ticks
+    Avg : 57.7 ticks
+    Std : 28.0 ticks
+
+  Notable observations:
+    Longest wait  : passenger3 waited 8 ticks at floor 20
+    Longest trip  : passenger3 took 89 ticks total
+    Shortest trip : passenger2 took 35 ticks total
+
+  Elevator usage:
+    E0 : 2 passenger(s) [passenger1, passenger3]  |  100 floors traveled  |  99% utilization
+    E1 : 1 passenger(s) [passenger2]  |  36 floors traveled  |  36% utilization
+====================================================

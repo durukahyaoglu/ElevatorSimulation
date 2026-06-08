@@ -1,0 +1,36 @@
+====================================================
+  Edge case — simultaneous up and down traffic across 3 elevators
+====================================================
+  Total requests : 8
+  Completed      : 8
+  Still waiting  : 0
+  In transit     : 0
+
+  Wait time   (request → board)
+    Min : 0 ticks
+    Max : 28 ticks
+    Avg : 10.4 ticks
+    Std : 10.7 ticks
+
+  Travel time (board → alight)
+    Min : 15 ticks
+    Max : 34 ticks
+    Avg : 23.0 ticks
+    Std : 6.7 ticks
+
+  Total time  (request → alight)
+    Min : 18 ticks
+    Max : 57 ticks
+    Avg : 33.4 ticks
+    Std : 15.4 ticks
+
+  Notable observations:
+    Longest wait  : passenger4 waited 28 ticks at floor 30
+    Longest trip  : passenger2 took 57 ticks total
+    Shortest trip : passenger6 took 18 ticks total
+
+  Elevator usage:
+    E0 : 4 passenger(s) [passenger1, passenger3, passenger6, passenger7]  |  29 floors traveled  |  29% utilization
+    E1 : 2 passenger(s) [passenger5, passenger8]  |  36 floors traveled  |  36% utilization
+    E2 : 2 passenger(s) [passenger2, passenger4]  |  58 floors traveled  |  57% utilization
+====================================================

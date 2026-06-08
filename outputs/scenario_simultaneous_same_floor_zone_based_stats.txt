@@ -1,0 +1,35 @@
+====================================================
+  Edge case — 6 passengers all on floor 1 going to different floors
+====================================================
+  Total requests : 6
+  Completed      : 6
+  Still waiting  : 0
+  In transit     : 0
+
+  Wait time   (request → board)
+    Min : 0 ticks
+    Max : 37 ticks
+    Avg : 6.2 ticks
+    Std : 15.1 ticks
+
+  Travel time (board → alight)
+    Min : 3 ticks
+    Max : 18 ticks
+    Avg : 9.8 ticks
+    Std : 5.3 ticks
+
+  Total time  (request → alight)
+    Min : 3 ticks
+    Max : 48 ticks
+    Avg : 16.0 ticks
+    Std : 16.6 ticks
+
+  Notable observations:
+    Longest wait  : passenger6 waited 37 ticks at floor 1
+    Longest trip  : passenger6 took 48 ticks total
+    Shortest trip : passenger1 took 3 ticks total
+
+  Elevator usage:
+    E0 : 6 passenger(s) [passenger1, passenger2, passenger3, passenger4, passenger5, passenger6]  |  49 floors traveled  |  49% utilization
+    E1 : never assigned a passenger
+====================================================

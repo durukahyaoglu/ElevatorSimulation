@@ -1,0 +1,37 @@
+====================================================
+  Bonus — 1 express elevator serving floors {1,20,40,60} only
+====================================================
+  Total requests : 7
+  Completed      : 4
+  Still waiting  : 0
+  In transit     : 3
+
+  Wait time   (request → board)
+    Min : 0 ticks
+    Max : 38 ticks
+    Avg : 14.0 ticks
+    Std : 18.1 ticks
+
+  Travel time (board → alight)
+    Min : 20 ticks
+    Max : 58 ticks
+    Avg : 35.0 ticks
+    Std : 17.5 ticks
+
+  Total time  (request → alight)
+    Min : 23 ticks
+    Max : 77 ticks
+    Avg : 49.0 ticks
+    Std : 23.5 ticks
+
+  Notable observations:
+    Longest wait  : passenger6 waited 38 ticks at floor 40
+    Longest trip  : passenger6 took 77 ticks total
+    Shortest trip : passenger2 took 23 ticks total
+    Unfinished    : passenger4, passenger5, passenger7 did not complete journey within 100 ticks
+
+  Elevator usage:
+    E0 : 6 passenger(s) [passenger1, passenger2, passenger3, passenger4, passenger5, passenger7]  |  101 floors traveled  |  100% utilization
+    E1 : 1 passenger(s) [passenger6]  |  78 floors traveled  |  77% utilization
+    E2 [EXPRESS floors=[1, 20, 40, 60]] : never assigned a passenger
+====================================================
