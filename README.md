@@ -14,7 +14,7 @@ A discrete-time simulation of an intelligent **Destination Dispatch** elevator s
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/durukahyaoglu/ElevatorSimulation.git
 cd ElevatorSimulation
 
 # Create and activate a virtual environment
