@@ -64,6 +64,7 @@ This runs all scenarios defined in `main.py` and writes results to the `outputs/
 |---|---|
 | `outputs/<scenario>_elevator_log.csv` | Elevator floor and direction at every tick |
 | `outputs/<scenario>_stats.txt` | Min / max / avg wait and total times with observations |
+| `outputs/comparison_report.pdf` | Side-by-side scheduler comparison table across all scenarios |
 
 ---
 
