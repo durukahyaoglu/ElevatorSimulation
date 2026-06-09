@@ -1,0 +1,36 @@
+====================================================
+  Lunchtime — 15 passengers on upper floors all heading down to floor 1, overflow at t=0
+====================================================
+  Total requests : 15
+  Completed      : 15
+  Still waiting  : 0
+  In transit     : 0
+
+  Wait time   (request → board)
+    Min : 1 ticks
+    Max : 68 ticks
+    Avg : 22.9 ticks
+    Std : 23.5 ticks
+
+  Travel time (board → alight)
+    Min : 20 ticks
+    Max : 42 ticks
+    Avg : 30.9 ticks
+    Std : 6.4 ticks
+
+  Total time  (request → alight)
+    Min : 39 ticks
+    Max : 97 ticks
+    Avg : 53.8 ticks
+    Std : 22.6 ticks
+
+  Notable observations:
+    Longest wait  : p15 waited 68 ticks at floor 30
+    Longest trip  : p13 took 97 ticks total
+    Shortest trip : p1 took 39 ticks total
+
+  Elevator usage:
+    E0 : 7 passenger(s) [p1, p4, p7, p10, p13, p14, p15]  |  98 floors traveled  |  97% utilization
+    E1 : 4 passenger(s) [p2, p5, p8, p11]  |  44 floors traveled  |  44% utilization
+    E2 : 4 passenger(s) [p3, p6, p9, p12]  |  48 floors traveled  |  48% utilization
+====================================================

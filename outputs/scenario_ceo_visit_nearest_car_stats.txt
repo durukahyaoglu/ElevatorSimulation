@@ -1,0 +1,36 @@
+====================================================
+  CEO visit — morning rush with express lane reserved for executives (floors {1,25,28,30})
+====================================================
+  Total requests : 16
+  Completed      : 16
+  Still waiting  : 0
+  In transit     : 0
+
+  Wait time   (request → board)
+    Min : 0 ticks
+    Max : 15 ticks
+    Avg : 3.8 ticks
+    Std : 6.7 ticks
+
+  Travel time (board → alight)
+    Min : 1 ticks
+    Max : 28 ticks
+    Avg : 15.8 ticks
+    Std : 9.0 ticks
+
+  Total time  (request → alight)
+    Min : 1 ticks
+    Max : 41 ticks
+    Avg : 19.6 ticks
+    Std : 13.1 ticks
+
+  Notable observations:
+    Longest wait  : p9 waited 15 ticks at floor 1
+    Longest trip  : p12 took 41 ticks total
+    Shortest trip : p1 took 1 ticks total
+
+  Elevator usage:
+    E0 : 8 passenger(s) [p1, p2, p3, p4, p9, p10, p11, p12]  |  42 floors traveled  |  42% utilization
+    E1 : 4 passenger(s) [p5, p6, p7, p8]  |  16 floors traveled  |  16% utilization
+    E2 [EXPRESS floors=[1, 25, 28, 30]] : 4 passenger(s) [ceo, exec1, exec2, exec3]  |  29 floors traveled  |  29% utilization
+====================================================

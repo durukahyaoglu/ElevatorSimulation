@@ -67,6 +67,35 @@ SCENARIOS = [
         "max_capacity": 5,
         "express_floors": {1, 20, 40, 60},
     },
+    {
+        "name": "scenario_morning_rush",
+        "description": "Morning rush — 15 passengers all from floor 1 heading up, overflow at t=0",
+        "num_elevators": 3,
+        "num_floors": 30,
+        "max_capacity": 4,
+    },
+    {
+        "name": "scenario_lunchtime",
+        "description": "Lunchtime — 15 passengers on upper floors all heading down to floor 1, overflow at t=0",
+        "num_elevators": 3,
+        "num_floors": 30,
+        "max_capacity": 4,
+    },
+    {
+        "name": "scenario_townhall",
+        "description": "Townhall — 15 passengers converging on floor 15, mixed up/down traffic, overflow at t=0",
+        "num_elevators": 3,
+        "num_floors": 30,
+        "max_capacity": 4,
+    },
+    {
+        "name": "scenario_ceo_visit",
+        "description": "CEO visit — morning rush with express lane reserved for executives (floors {1,25,28,30})",
+        "num_elevators": 3,
+        "num_floors": 30,
+        "max_capacity": 4,
+        "express_floors": {1, 25, 28, 30},
+    },
 ]
 
 
@@ -74,15 +103,22 @@ def parse_requests(path: Path) -> list[Request]:
     """Parse a CSV file with columns time, id, source, dest into a list of Requests."""
     with open(path, newline="") as f:
         reader = csv.DictReader(f)
-        return [
-            Request(
-                time=int(row["time"]),
-                id=row["id"],
-                source=int(row["source"]),
-                destination=int(row["dest"]),
-            )
-            for row in reader
-        ]
+        requests = []
+        for row in reader:
+            try:
+                time   = int(row["time"])
+                source = int(row["source"])
+                dest   = int(row["dest"])
+            except (ValueError, KeyError) as e:
+                raise ValueError(f"Non-integer value in {path.name}: {dict(row)}") from e
+            if time < 0:
+                raise ValueError(f"Request time must be >= 0, got {time} in {path.name}")
+            if source < 1:
+                raise ValueError(f"Source floor must be >= 1, got {source} in {path.name}")
+            if dest < 1:
+                raise ValueError(f"Destination floor must be >= 1, got {dest} in {path.name}")
+            requests.append(Request(time=time, id=row["id"], source=source, destination=dest))
+        return requests
 
 
 def write_elevator_log(log: list[dict], path: Path):

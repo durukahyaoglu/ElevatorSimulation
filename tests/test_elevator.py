@@ -1,10 +1,13 @@
 import sys
 import os
 
+import pytest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from elevator import Elevator, Direction
 from building import Building
+from models import Request
 
 
 # Helpers to keep tests concise with the updated signatures
@@ -302,3 +305,275 @@ class TestExpressElevator:
         assert j.alight_tick is not None
         assert j.elevator_id == b.elevators[-1].id
         assert b.elevators[-1].current_floor == 10
+
+
+# ---------------------------------------------------------------------------
+# Simulation helpers shared by Classes 2 and 3
+# ---------------------------------------------------------------------------
+
+def run_sim(
+    requests_list,
+    num_elevators,
+    num_floors,
+    max_capacity,
+    scheduler,
+    express_floors=None,
+    on_tick=None,
+):
+    """Run a 101-tick simulation (ticks 0-100) and return the Building."""
+    queue = sorted(
+        [Request(time=t, id=pid, source=src, destination=dst)
+         for t, pid, src, dst in requests_list],
+        key=lambda r: r.time,
+    )
+    building = Building(
+        num_floors=num_floors,
+        num_elevators=num_elevators,
+        max_capacity=max_capacity,
+        scheduler=scheduler,
+        express_floors=express_floors,
+    )
+    for tick in range(101):
+        while queue and queue[0].time <= tick:
+            r = queue.pop(0)
+            building.request(
+                origin=r.source, destination=r.destination,
+                passenger_id=r.id, tick=tick,
+            )
+        building.step(tick)
+        if on_tick:
+            on_tick(tick, building)
+    return building
+
+
+def run_scenario(
+    requests_list, num_elevators, num_floors, max_capacity,
+    scheduler, express_floors=None,
+):
+    """Return (completed_count, total_count) after a 101-tick simulation."""
+    building = run_sim(
+        requests_list, num_elevators, num_floors, max_capacity,
+        scheduler, express_floors,
+    )
+    completed = sum(1 for j in building.journeys if j.alight_tick is not None)
+    return completed, len(building.journeys)
+
+
+# ---------------------------------------------------------------------------
+# Class 1: scheduler assignment decisions
+# ---------------------------------------------------------------------------
+
+class TestSchedulerBehavior:
+    def test_nearest_car_picks_minimum_cost_elevator(self):
+        b = Building(num_floors=60, num_elevators=3, max_capacity=10, scheduler="nearest_car")
+        b.elevators[0].current_floor = 50
+        b.elevators[1].current_floor = 5
+        b.elevators[2].current_floor = 30
+        assigned = req(b, origin=6, destination=20, pid="p1", tick=0)
+        assert assigned == 1
+
+    def test_nearest_car_prefers_elevator_heading_toward_request(self):
+        b = Building(num_floors=60, num_elevators=2, max_capacity=10, scheduler="nearest_car")
+        b.elevators[0].current_floor = 3
+        b.elevators[0].direction = Direction.UP
+        b.elevators[0].dropoffs = {10}
+        b.elevators[1].current_floor = 12
+        b.elevators[1].direction = Direction.DOWN
+        b.elevators[1].dropoffs = {1}
+        assigned = req(b, origin=8, destination=20, pid="p1", tick=0)
+        assert assigned == 0
+
+    def test_round_robin_cycles_through_elevators(self):
+        b = Building(num_floors=60, num_elevators=3, max_capacity=10, scheduler="round_robin")
+        for i in range(6):
+            req(b, origin=1, destination=10, pid=f"p{i}", tick=0)
+        ids = [j.elevator_id for j in b.journeys]
+        assert ids == [0, 1, 2, 0, 1, 2]
+
+    def test_zone_based_assigns_by_origin_floor(self):
+        b = Building(num_floors=60, num_elevators=3, max_capacity=10, scheduler="zone_based")
+        a1 = req(b, origin=5,  destination=10, pid="p1", tick=0)
+        a2 = req(b, origin=25, destination=30, pid="p2", tick=0)
+        a3 = req(b, origin=55, destination=60, pid="p3", tick=0)
+        assert a1 == 0
+        assert a2 == 1
+        assert a3 == 2
+
+    def test_zone_based_falls_back_when_zone_elevator_full(self):
+        b = Building(num_floors=20, num_elevators=2, max_capacity=1, scheduler="zone_based")
+        req(b, origin=1, destination=5, pid="p1", tick=0)
+        assert not b.elevators[0].has_capacity()
+        result = req(b, origin=2, destination=8, pid="p2", tick=0)
+        assert result is None or result != b.elevators[0].id
+
+
+# ---------------------------------------------------------------------------
+# Class 2: physical and logical simulation invariants
+# ---------------------------------------------------------------------------
+
+_OVERFLOW_REQS = [
+    (0, "p1", 1, 50), (0, "p2", 1, 40), (0, "p3", 1, 30), (0, "p4", 1, 20),
+    (0, "p5", 2, 55), (0, "p6", 2, 45), (0, "p7", 3, 35), (0, "p8", 3, 25),
+]
+
+_BIDIR_REQS = [
+    (0, "p1", 1, 25), (0, "p2", 25, 1), (0, "p3", 1, 30), (0, "p4", 30, 1),
+    (0, "p5", 15, 5), (0, "p6", 5, 20), (5, "p7", 10, 28), (5, "p8", 20, 3),
+]
+
+
+class TestSimulationInvariants:
+    def test_board_tick_never_before_request(self):
+        building = run_sim(
+            _OVERFLOW_REQS, num_elevators=2, num_floors=60,
+            max_capacity=2, scheduler="nearest_car",
+        )
+        for j in building.journeys:
+            if j.board_tick is not None:
+                assert j.board_tick >= j.request_tick, (
+                    f"{j.id}: board_tick={j.board_tick} < request_tick={j.request_tick}"
+                )
+
+    def test_travel_time_physically_possible(self):
+        building = run_sim(
+            _OVERFLOW_REQS, num_elevators=2, num_floors=60,
+            max_capacity=2, scheduler="nearest_car",
+        )
+        for j in building.journeys:
+            if j.alight_tick is not None:
+                # The elevator boards the passenger and moves one floor in the same tick,
+                # so the minimum travel ticks for a direct trip is distance - 1.
+                min_possible = max(abs(j.destination - j.origin) - 1, 0)
+                actual = j.alight_tick - j.board_tick
+                assert actual >= min_possible, (
+                    f"{j.id}: travel={actual} < min_possible={min_possible}"
+                )
+
+    def test_capacity_never_exceeded_during_simulation(self):
+        violations = []
+
+        def check(tick, building):
+            for e in building.elevators:
+                if e.current_passengers > e.max_capacity:
+                    violations.append((tick, e.id, e.current_passengers, e.max_capacity))
+
+        run_sim(
+            _OVERFLOW_REQS, num_elevators=2, num_floors=60,
+            max_capacity=2, scheduler="nearest_car", on_tick=check,
+        )
+        assert not violations, f"Capacity exceeded at (tick, elevator_id, passengers, cap): {violations}"
+
+    def test_total_time_equals_wait_plus_travel(self):
+        building = run_sim(
+            _BIDIR_REQS, num_elevators=3, num_floors=30,
+            max_capacity=4, scheduler="nearest_car",
+        )
+        for j in building.journeys:
+            if j.alight_tick is not None:
+                assert j.total_time == j.wait_time + j.travel_time, (
+                    f"{j.id}: total={j.total_time} != wait={j.wait_time} + travel={j.travel_time}"
+                )
+
+
+# ---------------------------------------------------------------------------
+# Class 3: ground-truth completion count regression tests
+# ---------------------------------------------------------------------------
+
+_BASELINE_REQS = [(0, "p1", 1, 51), (0, "p2", 1, 37), (10, "p3", 20, 1)]
+_SINGLE_REQS   = [
+    (0, "p1", 1, 40), (0, "p2", 1, 55), (0, "p3", 5, 20),
+    (5, "p4", 30, 1), (10, "p5", 10, 50), (10, "p6", 45, 2),
+]
+_MANY_REQS  = [(0, "p1", 1, 60), (0, "p2", 30, 1), (0, "p3", 15, 45)]
+_SIMUL_REQS = [
+    (0, "p1", 1, 5), (0, "p2", 1, 10), (0, "p3", 1, 15),
+    (0, "p4", 1, 20), (0, "p5", 1, 8), (0, "p6", 1, 12),
+]
+_EXPRESS_REQS = [
+    (0, "p1", 1, 60), (0, "p2", 1, 25), (0, "p3", 20, 40),
+    (5, "p4", 5, 35), (5, "p5", 1, 20), (10, "p6", 40, 1), (10, "p7", 15, 45),
+]
+_MORNING_RUSH_REQS = [
+    (0, "p1",  1,  3), (0, "p2",  1,  5), (0, "p3",  1,  7), (0, "p4",  1,  9),
+    (0, "p5",  1, 11), (0, "p6",  1, 13), (0, "p7",  1, 15), (0, "p8",  1, 17),
+    (0, "p9",  1, 19), (0, "p10", 1, 21), (0, "p11", 1, 23), (0, "p12", 1, 25),
+    (0, "p13", 1, 27), (0, "p14", 1, 29), (0, "p15", 1, 30),
+]
+_LUNCHTIME_REQS = [
+    (0, "p1",  3, 1), (0, "p2",  5, 1), (0, "p3",  7, 1), (0, "p4",  9, 1),
+    (0, "p5", 11, 1), (0, "p6", 13, 1), (0, "p7", 15, 1), (0, "p8", 17, 1),
+    (0, "p9", 19, 1), (0, "p10", 21, 1), (0, "p11", 23, 1), (0, "p12", 25, 1),
+    (0, "p13", 27, 1), (0, "p14", 29, 1), (0, "p15", 30, 1),
+]
+_TOWNHALL_REQS = [
+    (0, "p1",  1, 15), (0, "p2",  3, 15), (0, "p3",  5, 15), (0, "p4",  7, 15),
+    (0, "p5",  9, 15), (0, "p6", 11, 15), (0, "p7", 13, 15), (0, "p8", 17, 15),
+    (0, "p9", 19, 15), (0, "p10", 21, 15), (0, "p11", 23, 15), (0, "p12", 25, 15),
+    (0, "p13", 27, 15), (0, "p14", 29, 15), (0, "p15", 30, 15),
+]
+_CEO_VISIT_REQS = [
+    (0, "ceo",   1, 28), (0, "exec1", 1, 30), (0, "exec2", 1, 25), (0, "exec3", 1, 28),
+    (0, "p1",    1,  3), (0, "p2",    1,  5), (0, "p3",    1,  7), (0, "p4",    1,  9),
+    (0, "p5",    1, 11), (0, "p6",    1, 13), (0, "p7",    1, 15), (0, "p8",    1, 17),
+    (0, "p9",    1, 19), (0, "p10",   1, 21), (0, "p11",   1, 23), (0, "p12",   1, 27),
+]
+
+_SCENARIOS = [
+    # (scenario_name, reqs, elevators, floors, cap, scheduler, express_floors, done, total)
+    ("baseline_nearest_car",          _BASELINE_REQS,      2,  60, 10, "nearest_car", None,              3, 3),
+    ("baseline_round_robin",          _BASELINE_REQS,      2,  60, 10, "round_robin", None,              3, 3),
+    ("baseline_zone_based",           _BASELINE_REQS,      2,  60, 10, "zone_based",  None,              3, 3),
+    ("single_elevator_nearest_car",   _SINGLE_REQS,        1,  60,  5, "nearest_car", None,              3, 6),
+    ("single_elevator_round_robin",   _SINGLE_REQS,        1,  60,  5, "round_robin", None,              3, 6),
+    ("single_elevator_zone_based",    _SINGLE_REQS,        1,  60,  5, "zone_based",  None,              3, 6),
+    ("many_elevators_nearest_car",    _MANY_REQS,          8,  60, 10, "nearest_car", None,              2, 3),
+    ("many_elevators_round_robin",    _MANY_REQS,          8,  60, 10, "round_robin", None,              3, 3),
+    ("many_elevators_zone_based",     _MANY_REQS,          8,  60, 10, "zone_based",  None,              3, 3),
+    ("capacity_overflow_nearest_car", _OVERFLOW_REQS,      2,  60,  2, "nearest_car", None,              5, 8),
+    ("capacity_overflow_round_robin", _OVERFLOW_REQS,      2,  60,  2, "round_robin", None,              4, 8),
+    ("capacity_overflow_zone_based",  _OVERFLOW_REQS,      2,  60,  2, "zone_based",  None,              2, 8),
+    ("simultaneous_nearest_car",      _SIMUL_REQS,         2,  20,  5, "nearest_car", None,              6, 6),
+    ("simultaneous_round_robin",      _SIMUL_REQS,         2,  20,  5, "round_robin", None,              6, 6),
+    ("simultaneous_zone_based",       _SIMUL_REQS,         2,  20,  5, "zone_based",  None,              6, 6),
+    ("bidirectional_nearest_car",     _BIDIR_REQS,         3,  30,  4, "nearest_car", None,              8, 8),
+    ("bidirectional_round_robin",     _BIDIR_REQS,         3,  30,  4, "round_robin", None,              8, 8),
+    ("bidirectional_zone_based",      _BIDIR_REQS,         3,  30,  4, "zone_based",  None,              8, 8),
+    ("express_nearest_car",           _EXPRESS_REQS,       3,  60,  5, "nearest_car", {1,20,40,60},      5, 7),
+    ("express_round_robin",           _EXPRESS_REQS,       3,  60,  5, "round_robin", {1,20,40,60},      6, 7),
+    ("express_zone_based",            _EXPRESS_REQS,       3,  60,  5, "zone_based",  {1,20,40,60},      4, 7),
+    ("morning_rush_nearest_car",      _MORNING_RUSH_REQS,  3,  30,  4, "nearest_car", None,             15, 15),
+    ("morning_rush_round_robin",      _MORNING_RUSH_REQS,  3,  30,  4, "round_robin", None,             15, 15),
+    ("morning_rush_zone_based",       _MORNING_RUSH_REQS,  3,  30,  4, "zone_based",  None,             12, 15),
+    ("lunchtime_nearest_car",         _LUNCHTIME_REQS,     3,  30,  4, "nearest_car", None,             15, 15),
+    ("lunchtime_round_robin",         _LUNCHTIME_REQS,     3,  30,  4, "round_robin", None,             15, 15),
+    ("lunchtime_zone_based",          _LUNCHTIME_REQS,     3,  30,  4, "zone_based",  None,             13, 15),
+    ("townhall_nearest_car",          _TOWNHALL_REQS,      3,  30,  4, "nearest_car", None,             15, 15),
+    ("townhall_round_robin",          _TOWNHALL_REQS,      3,  30,  4, "round_robin", None,             15, 15),
+    ("townhall_zone_based",           _TOWNHALL_REQS,      3,  30,  4, "zone_based",  None,             15, 15),
+    ("ceo_visit_nearest_car",         _CEO_VISIT_REQS,     3,  30,  4, "nearest_car", {1,25,28,30},     16, 16),
+    ("ceo_visit_round_robin",         _CEO_VISIT_REQS,     3,  30,  4, "round_robin", {1,25,28,30},     16, 16),
+    ("ceo_visit_zone_based",          _CEO_VISIT_REQS,     3,  30,  4, "zone_based",  {1,25,28,30},     12, 16),
+]
+
+
+class TestRegressionScenarios:
+    @pytest.mark.parametrize(
+        "scenario_name,requests_list,num_elevators,num_floors,max_capacity,scheduler,express_floors,expected_completed,expected_total",
+        _SCENARIOS,
+        ids=[s[0] for s in _SCENARIOS],
+    )
+    def test_scenario_completion_count(
+        self, scenario_name, requests_list, num_elevators, num_floors,
+        max_capacity, scheduler, express_floors,
+        expected_completed, expected_total,
+    ):
+        completed, total = run_scenario(
+            requests_list, num_elevators, num_floors, max_capacity,
+            scheduler, express_floors,
+        )
+        assert total == expected_total, (
+            f"{scenario_name}: expected {expected_total} total journeys, got {total}"
+        )
+        assert completed == expected_completed, (
+            f"{scenario_name}: expected {expected_completed}/{expected_total} completed, got {completed}/{total}"
+        )

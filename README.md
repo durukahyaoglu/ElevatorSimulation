@@ -2,6 +2,8 @@
 
 A discrete-time simulation of an intelligent **Destination Dispatch** elevator system written in Python. Passengers specify both their origin and destination floor at the time of request, and the scheduler immediately assigns the optimal elevator to minimise total journey time.
 
+> **Interactive results summary:** Open [elevator_simulation_presentation.html](elevator_simulation_presentation.html) in a browser to view key insights, tradeoffs between different scheduling algorithms, scenario breakdowns, and scheduler comparison charts for all simulation runs.
+
 ---
 
 ## How to Run
@@ -18,7 +20,7 @@ git clone https://github.com/durukahyaoglu/ElevatorSimulation.git
 cd ElevatorSimulation
 
 # Create and activate a virtual environment
-python3.12 -m venv venv
+python -m venv venv           # If you have multiple python versions installed use python3.12 instead
 source venv/bin/activate      # macOS / Linux
 venv\Scripts\activate         # Windows
 
@@ -65,6 +67,37 @@ This runs all scenarios defined in `main.py` and writes results to the `outputs/
 
 ---
 
+## Running Tests
+
+```bash
+# Activate the virtual environment first
+source venv/bin/activate        # macOS / Linux
+venv\Scripts\activate           # Windows
+
+# Run all tests
+python -m pytest tests/test_elevator.py -v
+```
+
+Useful flags:
+
+| Flag | Effect |
+|---|---|
+| `-v` | Verbose — prints each test name and result |
+| `-x` | Stop on first failure |
+| `-s` | Show print output (useful for debugging) |
+
+Run a specific class or test:
+
+```bash
+# One class
+python -m pytest tests/test_elevator.py::TestSchedulerBehavior -v
+
+# One parametrized case
+python -m pytest tests/test_elevator.py::TestRegressionScenarios::test_scenario_completion_count[baseline_nearest_car] -v
+```
+
+---
+
 ## Project Structure
 
 ```
@@ -108,7 +141,7 @@ ElevatorSimulation/
 
 | Decision | Alternative | Reason chosen |
 |---|---|---|
-| Nearest Car (assignment) + SCAN (movement) | Pure SCAN or Round Robin | Nearest Car minimises `wait + travel` per passenger; SCAN keeps movement efficient once assigned |
+| Nearest Car (assignment) + SCAN (movement) | Zone Based or Round Robin | Nearest Car minimises `wait + travel` per passenger; SCAN keeps movement efficient once assigned. Efficient elevator allocation is deprioritized. |
 | Greedy single-step assignment | Batch optimisation | Greedy is O(n·e) per request and satisfies the real-time constraint; batch optimisation would require knowing future requests |
 | Instantaneous boarding | Boarding costs one tick | The spec defines one time unit as one floor of travel only; boarding time is unspecified |
 | FIFO waiting queue | Priority queue by wait time | FIFO is fair and prevents starvation; priority by wait time would be equivalent here since all passengers arrive with the same urgency |
@@ -228,3 +261,78 @@ Three schedulers are compared across all scenarios. A formatted PDF report is av
 | Utilization | E0: 57%, E1: 51%, E2: 0% | E0: 57%, E1: 48%, E2: 29% | E0: 29%, E1: 36%, E2: 57% |
 
 > Zone Based wins on avg total time — origin floors are naturally spread across zones so each elevator handles nearby traffic with minimal detour. Nearest Car never assigns E2 because E0/E1 always appear closer.
+
+---
+
+### scenario_express_elevator — 3 elevators (1 express), 7 passengers
+
+| Metric | Nearest Car | Round Robin | Zone Based |
+|---|---|---|---|
+| Completed | 5/7 | 6/7 | 4/7 |
+| Avg wait time | 4.8 ticks | 15.2 ticks | 14.0 ticks |
+| Max wait time | 18 ticks | 42 ticks | 38 ticks |
+| Avg total time | 37.0 ticks | 46.7 ticks | 49.0 ticks |
+| Max total time | 58 ticks | 67 ticks | 77 ticks |
+| Utilization | E0: 44%, E1: 34%, E2: 100% | E0: 100%, E1: 66%, E2: 77% | E0: 100%, E1: 77% |
+
+> Nearest Car routes express-eligible passengers (floors 1, 20, 40, 60) straight to E2, keeping it fully utilised while E0/E1 handle the rest. Zone Based leaves the express elevator idle — express-eligible passengers originate from floors in E0/E1's zones and are never routed to E2.
+
+---
+
+### scenario_morning_rush — 3 elevators, 15 passengers all from floor 1 going up
+
+| Metric | Nearest Car | Round Robin | Zone Based |
+|---|---|---|---|
+| Completed | 15/15 | 15/15 | 12/15 |
+| Avg wait time | 3.0 ticks | 8.6 ticks | 20.7 ticks |
+| Max wait time | 15 ticks | 47 ticks | 47 ticks |
+| Avg total time | 18.1 ticks | 23.7 ticks | 33.3 ticks |
+| Max total time | 44 ticks | 76 ticks | 71 ticks |
+| Utilization | E0: 45%, E1: 16%, E2: 24% | E0: 65%, E1: 71%, E2: 76% | E0: 100% |
+
+> Nearest Car completes all 15 with the lowest wait (3 ticks avg) by grouping passengers heading to nearby floors onto the same elevator. Zone Based collapses — every passenger originates from floor 1 (E0's zone), so E1 and E2 sit idle and 3 passengers time out.
+
+---
+
+### scenario_lunchtime — 3 elevators, 15 passengers on various floors all going down to floor 1
+
+| Metric | Nearest Car | Round Robin | Zone Based |
+|---|---|---|---|
+| Completed | 15/15 | 15/15 | 13/15 |
+| Avg wait time | 18.1 ticks | 22.9 ticks | 15.5 ticks |
+| Max wait time | 44 ticks | 68 ticks | 49 ticks |
+| Avg total time | 39.4 ticks | 53.8 ticks | 35.0 ticks |
+| Max total time | 73 ticks | 97 ticks | 67 ticks |
+| Utilization | E0: 73%, E1: 32%, E2: 48% | E0: 97%, E1: 44%, E2: 48% | E0: 16%, E1: 67%, E2: 100% |
+
+> Unlike morning rush, passengers here are spread across all floors so Zone Based naturally distributes load across zones — each elevator handles its own zone's passengers going down, giving Zone Based the best avg total time (35 ticks). NC and RR both complete all 15 but with higher total times due to longer cross-zone detours.
+
+---
+
+### scenario_townhall — 3 elevators, 15 passengers converging on floor 15
+
+| Metric | Nearest Car | Round Robin | Zone Based |
+|---|---|---|---|
+| Completed | 15/15 | 15/15 | 15/15 |
+| Avg wait time | 14.1 ticks | 14.1 ticks | 18.1 ticks |
+| Max wait time | 28 ticks | 28 ticks | 52 ticks |
+| Avg total time | 24.6 ticks | 27.8 ticks | 28.5 ticks |
+| Max total time | 43 ticks | 43 ticks | 67 ticks |
+| Utilization | E0: 44%, E1: 18%, E2: 34% | E0: 38%, E1: 42%, E2: 44% | E0: 26%, E1: 22%, E2: 67% |
+
+> All three schedulers complete every journey. Nearest Car and Round Robin tie on max wait (28 ticks) and both beat Zone Based's max wait of 52 ticks. Zone Based's single destination (floor 15) sits squarely in E1's zone, forcing passengers from other zones to wait for cross-zone assignment.
+
+---
+
+### scenario_ceo_visit — 3 elevators (1 express), 16 passengers from floor 1, executives reserved
+
+| Metric | Nearest Car | Round Robin | Zone Based |
+|---|---|---|---|
+| Completed | 16/16 | 16/16 | 12/16 |
+| Avg wait time | 3.8 ticks | 23.9 ticks | 43.3 ticks |
+| Max wait time | 15 ticks | 57 ticks | 73 ticks |
+| Avg total time | 19.6 ticks | 39.9 ticks | 57.9 ticks |
+| Max total time | 41 ticks | 79 ticks | 89 ticks |
+| Utilization | E0: 42%, E1: 16%, E2: 29% | E0: 79%, E1: 77%, E2: 24% | E0: 100% |
+
+> Nearest Car is the clear winner — the express elevator (E2) is immediately filled with the CEO and 3 executives at t=0, while E0/E1 handle the 12 regular employees in parallel. All 16 complete with only 3.8 ticks avg wait. Zone Based is the worst (12/16, 43 ticks avg wait) because all passengers start from floor 1 (E0's zone), starving E1 and E2 of assignments.

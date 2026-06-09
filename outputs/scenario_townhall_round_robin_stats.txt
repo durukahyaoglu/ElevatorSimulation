@@ -1,0 +1,36 @@
+====================================================
+  Townhall — 15 passengers converging on floor 15, mixed up/down traffic, overflow at t=0
+====================================================
+  Total requests : 15
+  Completed      : 15
+  Still waiting  : 0
+  In transit     : 0
+
+  Wait time   (request → board)
+    Min : 0 ticks
+    Max : 28 ticks
+    Avg : 14.1 ticks
+    Std : 9.6 ticks
+
+  Travel time (board → alight)
+    Min : 2 ticks
+    Max : 26 ticks
+    Avg : 13.7 ticks
+    Std : 7.3 ticks
+
+  Total time  (request → alight)
+    Min : 13 ticks
+    Max : 43 ticks
+    Avg : 27.8 ticks
+    Std : 14.4 ticks
+
+  Notable observations:
+    Longest wait  : p15 waited 28 ticks at floor 30
+    Longest trip  : p9 took 43 ticks total
+    Shortest trip : p1 took 13 ticks total
+
+  Elevator usage:
+    E0 : 5 passenger(s) [p1, p4, p7, p10, p13]  |  38 floors traveled  |  38% utilization
+    E1 : 5 passenger(s) [p2, p5, p8, p11, p14]  |  42 floors traveled  |  42% utilization
+    E2 : 5 passenger(s) [p3, p6, p9, p12, p15]  |  44 floors traveled  |  44% utilization
+====================================================

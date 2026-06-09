@@ -1,0 +1,37 @@
+====================================================
+  Morning rush — 15 passengers all from floor 1 heading up, overflow at t=0
+====================================================
+  Total requests : 15
+  Completed      : 12
+  Still waiting  : 0
+  In transit     : 3
+
+  Wait time   (request → board)
+    Min : 0 ticks
+    Max : 47 ticks
+    Avg : 20.7 ticks
+    Std : 20.5 ticks
+
+  Travel time (board → alight)
+    Min : 1 ticks
+    Max : 24 ticks
+    Avg : 12.7 ticks
+    Std : 7.6 ticks
+
+  Total time  (request → alight)
+    Min : 1 ticks
+    Max : 71 ticks
+    Avg : 33.3 ticks
+    Std : 27.7 ticks
+
+  Notable observations:
+    Longest wait  : p9 waited 47 ticks at floor 1
+    Longest trip  : p12 took 71 ticks total
+    Shortest trip : p1 took 1 ticks total
+    Unfinished    : p13, p14, p15 did not complete journey within 100 ticks
+
+  Elevator usage:
+    E0 : 15 passenger(s) [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15]  |  101 floors traveled  |  100% utilization
+    E1 : never assigned a passenger
+    E2 : never assigned a passenger
+====================================================

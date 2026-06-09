@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elevator System Simulation — Presentation</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+nav{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px}
+.nav-brand{font-size:14px;font-weight:600;color:#1e293b}
+.nav-brand span{color:#94a3b8;font-weight:400;margin-left:6px}
+.nav-tabs{display:flex;gap:2px}
+.nav-tab{font-family:inherit;font-size:13px;font-weight:500;padding:6px 16px;border-radius:8px;border:none;background:transparent;color:#64748b;cursor:pointer;transition:all .12s}
+.nav-tab:hover{background:#f1f5f9;color:#334155}
+.nav-tab.active{background:#1e293b;color:#fff}
+.page{padding:24px;max-width:980px;margin:0 auto}
+.page-hidden{display:none}
+.card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:20px;margin-bottom:16px}
+.section-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-card{background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;padding:14px 16px}
+.stat-label{font-size:12px;color:#64748b;margin-bottom:4px}
+.stat-val{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.algo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.algo-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px}
+.algo-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;margin-bottom:8px;letter-spacing:.04em}
+.algo-name{font-size:13px;font-weight:600;margin-bottom:5px}
+.algo-desc{font-size:12px;color:#64748b;line-height:1.5;margin-bottom:8px}
+.algo-wins{font-size:11px;color:#94a3b8;font-style:italic}
+.winner-table{width:100%;border-collapse:collapse;font-size:12px}
+.winner-table th{text-align:left;padding:7px 10px;font-weight:600;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#94a3b8;border-bottom:1px solid #e2e8f0}
+.winner-table td{padding:7px 10px;border-bottom:1px solid #f8fafc;vertical-align:top;line-height:1.45}
+.winner-table tr:last-child td{border-bottom:none}
+.winner-table tr.section-divider td{background:#f8fafc;font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;padding:6px 10px;border-bottom:1px solid #e2e8f0}
+.w{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.w-best{background:#d1fae5;color:#065f46}
+.w-worst{background:#fee2e2;color:#991b1b}
+.w-mid{color:#64748b}
+.w-tie{background:#e0e7ff;color:#3730a3}
+.inputs-tag{font-size:10px;color:#475569;background:#f1f5f9;padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:2px;white-space:nowrap}
+.rec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px}
+.rec-card{border-radius:10px;padding:16px;border:1px solid #e2e8f0}
+.rec-head{font-size:13px;font-weight:700;margin-bottom:8px}
+.rec-rule{font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px}
+.rec-use{font-size:11px;font-weight:600;color:#94a3b8;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.rec-tag{display:inline-block;font-size:11px;padding:3px 8px;border-radius:5px;margin:2px 2px 2px 0;font-weight:500}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.insight-card{background:#fff;border:1px solid #e2e8f0;border-left:3px solid #e2e8f0;border-radius:0 10px 10px 0;padding:14px 16px}
+.insight-head{font-size:13px;font-weight:600;margin-bottom:5px}
+.insight-body{font-size:12px;color:#64748b;line-height:1.55}
+.chart-legend{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap}
+.cleg{display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b}
+.cdot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.traj-wrap{border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#f8fafc}
+canvas{display:block;width:100%}
+.btn-group{display:flex;flex-wrap:wrap;gap:6px}
+.btn{font-family:inherit;font-size:12px;font-weight:500;padding:6px 12px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;transition:all .12s}
+.btn:hover{border-color:#94a3b8;color:#334155}
+.btn.active-sc{border-color:#334155;background:#334155;color:#fff}
+.btn.active-nc{border-color:#f59e0b;background:#fef3c7;color:#92400e}
+.btn.active-rr{border-color:#3b82f6;background:#dbeafe;color:#1e40af}
+.btn.active-zb{border-color:#10b981;background:#d1fae5;color:#065f46}
+.info-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pill{font-size:11px;font-weight:500;padding:3px 9px;border-radius:10px;background:#f1f5f9;color:#475569}
+.pill strong{color:#1e293b}
+.pill-red{background:#fee2e2;color:#991b1b}
+.leg-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b}
+.leg-line{width:22px;height:3px;border-radius:2px}
+.leg-o{width:12px;height:12px;border-radius:50%;border:2px solid #64748b;background:transparent}
+.leg-f{width:12px;height:12px;border-radius:50%;background:#64748b}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:7px 10px;color:#94a3b8;font-weight:600;font-size:11px;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid #e2e8f0}
+td{padding:7px 10px;border-bottom:1px solid #f8fafc;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px}
+.bd{background:#d1fae5;color:#065f46}
+.bt{background:#fef3c7;color:#92400e}
+.bm{background:#fee2e2;color:#991b1b}
+.mono{font-family:ui-monospace,monospace;font-size:11px}
+@media(prefers-color-scheme:dark){
+  body{background:#0f172a;color:#e2e8f0}
+  nav{background:#1e293b;border-color:#334155}
+  .nav-brand{color:#e2e8f0}
+  .nav-tab{color:#94a3b8}
+  .nav-tab:hover{background:#0f172a;color:#cbd5e1}
+  .nav-tab.active{background:#e2e8f0;color:#1e293b}
+  .card{background:#1e293b;border-color:#334155}
+  .stat-card{background:#0f172a;border-color:#334155}
+  .algo-card,.rec-card{background:#1e293b;border-color:#334155}
+  .insight-card{background:#1e293b;border-color:#334155;border-left-color:#334155}
+  .winner-table th{border-color:#334155;color:#475569}
+  .winner-table td{border-color:#0f172a}
+  .winner-table tr.section-divider td{background:#0f172a;border-color:#334155}
+  .inputs-tag{background:#0f172a;color:#94a3b8}
+  .w-best{background:#064e3b;color:#6ee7b7}
+  .w-worst{background:#7f1d1d;color:#fca5a5}
+  .w-tie{background:#1e1b4b;color:#a5b4fc}
+  .traj-wrap{border-color:#334155;background:#0f172a}
+  .btn{background:#1e293b;border-color:#334155;color:#94a3b8}
+  .btn:hover{border-color:#64748b;color:#cbd5e1}
+  .btn.active-sc{background:#e2e8f0;color:#1e293b;border-color:#e2e8f0}
+  .pill{background:#0f172a;color:#94a3b8}
+  .pill strong{color:#f1f5f9}
+  .pill-red{background:#7f1d1d;color:#fca5a5}
+  th{color:#475569;border-color:#334155}
+  td{border-color:#1e293b}
+  .leg-item{color:#94a3b8}
+  .stat-label,.algo-desc,.algo-wins,.insight-body,.rec-rule{color:#94a3b8}
+  .rec-use{color:#475569}
+  .bd{background:#064e3b;color:#6ee7b7}
+  .bt{background:#451a03;color:#fcd34d}
+  .bm{background:#7f1d1d;color:#fca5a5}
+  .mono{color:#cbd5e1}
+}
+@media(max-width:700px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .algo-grid,.insight-grid,.rec-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand">Elevator System Simulation</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab1" onclick="showPage(1)">Overview &amp; Comparison</button>
+    <button class="nav-tab" id="tab2" onclick="showPage(2)">Space-Time Explorer</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════ PAGE 1 ═══════════════════════════ -->
+<div id="page-1" class="page">
+
+  <div style="margin-bottom:20px">
+    <p style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px;font-family:ui-monospace,monospace">DESTINATION DISPATCH SIMULATION · PYTHON</p>
+    <h1 style="font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px">Scheduler comparison dashboard</h1>
+    <p style="font-size:13px;color:#64748b">3 scheduling algorithms × 11 scenarios × 101 discrete time ticks — data sourced directly from simulation</p>
+  </div>
+
+  <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card"><p class="stat-label">Scenarios tested</p><p class="stat-val">11</p></div>
+    <div class="stat-card"><p class="stat-label">Algorithms compared</p><p class="stat-val">3</p></div>
+    <div class="stat-card"><p class="stat-label">Ticks per run</p><p class="stat-val">101</p></div>
+  </div>
+
+  <div class="algo-grid">
+    <div class="algo-card">
+      <div class="algo-badge" style="background:#fef3c7;color:#92400e">NEAREST CAR</div>
+      <p class="algo-name">Nearest Car <span style="font-size:11px;font-weight:400;color:#94a3b8">(default)</span></p>
+      <p class="algo-desc">Assigns each request to the elevator with the lowest estimated wait + travel time, following the actual SCAN path rather than straight-line distance.</p>
+      <p class="algo-wins">Wins: 7 of 11 scenarios — strongest default choice across all traffic types</p>
+    </div>
+    <div class="algo-card">
+      <div class="algo-badge" style="background:#dbeafe;color:#1e40af">ROUND ROBIN</div>
+      <p class="algo-name">Round Robin <span style="font-size:11px;font-weight:400;color:#94a3b8">(bonus)</span></p>
+      <p class="algo-desc">Cycles through elevators in order regardless of floor position. Distributes requests evenly, preventing any single elevator from being overwhelmed.</p>
+      <p class="algo-wins">Wins: over-provisioned fleets and express + regular hybrid setups</p>
+    </div>
+    <div class="algo-card">
+      <div class="algo-badge" style="background:#d1fae5;color:#065f46">ZONE BASED</div>
+      <p class="algo-name">Zone Based <span style="font-size:11px;font-weight:400;color:#94a3b8">(bonus)</span></p>
+      <p class="algo-desc">Divides floors into equal contiguous zones — each elevator exclusively serves passengers whose origin falls in its zone.</p>
+      <p class="algo-wins">Wins: bidirectional traffic when floors naturally separate by direction</p>
+    </div>
+  </div>
+
+  <!-- Bar chart -->
+  <div class="card">
+    <p class="section-label">Average total time per passenger — all scenarios (lower is better)</p>
+    <p style="font-size:12px;color:#64748b;margin-bottom:12px">Completed journeys only. Includes wait + travel time in discrete ticks. Scenarios with fewer completions will show lower averages — check the table below for full context.</p>
+    <div class="chart-legend">
+      <div class="cleg"><div class="cdot" style="background:#f59e0b"></div>Nearest Car</div>
+      <div class="cleg"><div class="cdot" style="background:#3b82f6"></div>Round Robin</div>
+      <div class="cleg"><div class="cdot" style="background:#10b981"></div>Zone Based</div>
+    </div>
+    <div style="position:relative;width:100%;height:300px">
+      <canvas id="totalChart" role="img" aria-label="Grouped bar chart showing average total time across all 11 scenarios for all three schedulers."></canvas>
+    </div>
+  </div>
+
+  <!-- Winner table -->
+  <div class="card">
+    <p class="section-label">Algorithm winner by scenario</p>
+    <p style="font-size:12px;color:#64748b;margin-bottom:14px">Winner = most completions first; lowest average total time as tiebreaker. Metric shown is avg total time in ticks for completed journeys, or completion count where it differs.</p>
+    <div style="overflow-x:auto">
+    <table class="winner-table">
+      <thead>
+        <tr>
+          <th style="min-width:120px">Scenario</th>
+          <th style="min-width:150px">Inputs</th>
+          <th style="min-width:110px">Nearest Car</th>
+          <th style="min-width:100px">Round Robin</th>
+          <th style="min-width:100px">Zone Based</th>
+          <th style="min-width:260px">Key insight</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="section-divider"><td colspan="6">System edge cases</td></tr>
+        <tr>
+          <td style="font-weight:600">Baseline</td>
+          <td><span class="inputs-tag">2 elevators · 60 floors</span><br><span class="inputs-tag">cap 10 · 3 passengers</span></td>
+          <td><span class="w w-best">40.3 ticks ✓</span></td>
+          <td><span class="w w-worst">57.7 ticks</span></td>
+          <td><span class="w w-worst">57.7 ticks</span></td>
+          <td style="color:#64748b;font-size:11px">NC groups passengers headed to nearby floors onto the same elevator, avoiding a second round trip across 50+ floors. Zone Based assigns everything to E0, leaving E1 parked idle for the entire simulation.</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Single elevator</td>
+          <td><span class="inputs-tag">1 elevator · 60 floors</span><br><span class="inputs-tag">cap 5 · 6 passengers</span></td>
+          <td><span class="w w-tie">3/6 done</span></td>
+          <td><span class="w w-tie">3/6 done</span></td>
+          <td><span class="w w-tie">3/6 done</span></td>
+          <td style="color:#64748b;font-size:11px">With only one elevator, all three algorithms make identical choices — there is nothing to optimize. The bottleneck is hardware capacity, not scheduling logic. Adding a second elevator would matter far more than switching algorithms.</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Many elevators</td>
+          <td><span class="inputs-tag">8 elevators · 60 floors</span><br><span class="inputs-tag">cap 10 · 3 passengers</span></td>
+          <td><span class="w w-worst">2/3 done</span></td>
+          <td><span class="w w-best">3/3 done ✓</span></td>
+          <td><span class="w w-best">3/3 done ✓</span></td>
+          <td style="color:#64748b;font-size:11px">NC always picks E0 because it starts at floor 1 — the same floor as every request — making it permanently the cheapest choice. E1 through E7 sit idle and one passenger never completes. RR and ZB distribute load across multiple elevators, completing all three journeys.</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Capacity overflow</td>
+          <td><span class="inputs-tag">2 elevators · 60 floors</span><br><span class="inputs-tag">cap 2 · 8 passengers</span></td>
+          <td><span class="w w-best">5/8 done ✓</span></td>
+          <td><span class="w w-mid">4/8 done</span></td>
+          <td><span class="w w-worst">2/8 done</span></td>
+          <td style="color:#64748b;font-size:11px">NC's waiting queue re-assigns passengers the moment any elevator slot opens, recovering quickly as elevators drop passengers. Zone Based assigns all 8 passengers to E0 (their zone), ignoring E1 entirely — 4 passengers are stranded with no elevator ever visiting them.</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Same floor surge</td>
+          <td><span class="inputs-tag">2 elevators · 20 floors</span><br><span class="inputs-tag">cap 5 · 6 passengers</span></td>
+          <td><span class="w w-best">0 wait ✓</span></td>
+          <td><span class="w w-best">0 wait ✓</span></td>
+          <td><span class="w w-worst">37 tick max wait</span></td>
+          <td style="color:#64748b;font-size:11px">NC and RR freely split the 6 passengers across both elevators — zero waiting for anyone. Zone Based locks all passengers into E0's zone since they all originate from floor 1, forcing E0 to make three separate trips while E1 sits completely unused throughout the simulation.</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Bidirectional</td>
+          <td><span class="inputs-tag">3 elevators · 30 floors</span><br><span class="inputs-tag">cap 4 · 8 passengers</span></td>
+          <td><span class="w w-worst">37.4 avg</span></td>
+          <td><span class="w w-mid">34.6 avg</span></td>
+          <td><span class="w w-best">33.4 avg ✓</span></td>
+          <td style="color:#64748b;font-size:11px">Traffic naturally splits into up-bound and down-bound streams. Zone Based assigns each stream to a dedicated elevator, eliminating unnecessary direction reversals. NC tends to overload the first elevator it finds available, causing more backtracking than the other algorithms.</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Express elevator</td>
+          <td><span class="inputs-tag">3 elevators · 60 floors</span><br><span class="inputs-tag">cap 5 · 7 passengers</span></td>
+          <td><span class="w w-mid">5/7 done</span></td>
+          <td><span class="w w-best">6/7 done ✓</span></td>
+          <td><span class="w w-worst">4/7 done</span></td>
+          <td style="color:#64748b;font-size:11px">RR distributes requests across all three elevators including the express, completing the most journeys. Zone Based funnels nearly all non-express traffic to E0, pushing it beyond its practical capacity and leaving three passengers unserved within 101 ticks.</td>
+        </tr>
+
+        <tr class="section-divider"><td colspan="6">Realistic office scenarios</td></tr>
+        <tr>
+          <td style="font-weight:600">Morning rush</td>
+          <td><span class="inputs-tag">3 elevators · 30 floors</span><br><span class="inputs-tag">cap 4 · 15 passengers</span><br><span class="inputs-tag">all from floor 1 going up</span></td>
+          <td><span class="w w-best">18.1 avg ✓</span></td>
+          <td><span class="w w-mid">23.7 avg</span></td>
+          <td><span class="w w-worst">12/15 done</span></td>
+          <td style="color:#64748b;font-size:11px">NC groups passengers heading to nearby floors onto the same elevator trip (e.g. floors 3, 5, 7, 9 on E0), completing all 15 in just 3 ticks average wait. Zone Based collapses entirely: because every passenger originates from floor 1, they all fall into E0's zone — E1 and E2 never move, and 3 passengers are still waiting at tick 100.</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Lunchtime</td>
+          <td><span class="inputs-tag">3 elevators · 30 floors</span><br><span class="inputs-tag">cap 4 · 15 passengers</span><br><span class="inputs-tag">scattered floors → floor 1</span></td>
+          <td><span class="w w-best">15/15 done ✓</span></td>
+          <td><span class="w w-worst">53.8 avg</span></td>
+          <td><span class="w w-mid">35.0 avg★</span></td>
+          <td style="color:#64748b;font-size:11px">The reverse of morning rush — passengers spread across all 30 floors heading down. This is Zone Based's best scenario: each elevator naturally handles its own zone's downward traffic, giving ZB the lowest avg total time (35 ticks) for its 13 completed journeys. NC wins on completions (15/15) and is the safer choice. ★ZB's 35-tick avg covers only 13/15 journeys.</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Town hall</td>
+          <td><span class="inputs-tag">3 elevators · 30 floors</span><br><span class="inputs-tag">cap 4 · 15 passengers</span><br><span class="inputs-tag">mixed floors → floor 15</span></td>
+          <td><span class="w w-best">24.6 avg ✓</span></td>
+          <td><span class="w w-mid">27.8 avg</span></td>
+          <td><span class="w w-mid">28.5 avg</span></td>
+          <td style="color:#64748b;font-size:11px">All three algorithms complete every journey — floor 15 is reachable from any zone. NC and RR tie on max wait at 28 ticks. Zone Based's max wait spikes to 52 ticks because floor 15 sits in E1's zone, so passengers from other zones queue behind E1 rather than being routed to whichever elevator reaches floor 15 first. NC's lower avg (24.6 vs 28.5) reflects smarter pickup sequencing.</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">CEO visit</td>
+          <td><span class="inputs-tag">3 elevators · 30 floors</span><br><span class="inputs-tag">cap 4 · 16 passengers</span><br><span class="inputs-tag">express: floors 1,25,28,30</span></td>
+          <td><span class="w w-best">19.6 avg ✓</span></td>
+          <td><span class="w w-mid">39.9 avg</span></td>
+          <td><span class="w w-worst">12/16 done</span></td>
+          <td style="color:#64748b;font-size:11px">NC is the standout: E2 (express) fills instantly with the CEO and 3 executives at t=0, while E0 and E1 handle the 12 employees in parallel — all 16 journeys complete with only 3.8 ticks average wait. Zone Based fails for the same reason as morning rush: all 16 passengers originate from floor 1, so E0 receives every request while E1 and E2 stay idle and 4 employees are never served.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Algorithm recommendation section -->
+  <div class="card">
+    <p class="section-label">When to use each algorithm</p>
+    <p style="font-size:12px;color:#64748b;margin-bottom:16px">Recommendations based on simulation results across all 11 scenarios. Real-world traffic patterns map closely to the office scenarios below.</p>
+    <div class="rec-grid">
+      <div class="rec-card" style="border-top:3px solid #f59e0b">
+        <p class="rec-head" style="color:#92400e">Nearest Car — default choice</p>
+        <p class="rec-rule">Best when passenger pickups are spread across multiple floors and traffic volume is high enough that efficient routing matters. Its cost estimator accounts for direction, so it naturally avoids sending elevators on unnecessary detours.</p>
+        <p class="rec-use">Use when</p>
+        <span class="rec-tag" style="background:#fef3c7;color:#92400e">Morning rush (all 15 done)</span>
+        <span class="rec-tag" style="background:#fef3c7;color:#92400e">Lunchtime (all 15 done)</span>
+        <span class="rec-tag" style="background:#fef3c7;color:#92400e">CEO visit (all 16 done)</span>
+        <span class="rec-tag" style="background:#fef3c7;color:#92400e">Town hall (fastest avg)</span>
+        <span class="rec-tag" style="background:#fef3c7;color:#92400e">Capacity pressure</span>
+        <span class="rec-tag" style="background:#fef3c7;color:#92400e">Mixed or unpredictable traffic</span>
+      </div>
+      <div class="rec-card" style="border-top:3px solid #3b82f6">
+        <p class="rec-head" style="color:#1e40af">Round Robin — fairness first</p>
+        <p class="rec-rule">Best when the building has more elevator capacity than it typically needs. RR prevents any single elevator from monopolising all requests, which matters in over-provisioned fleets or hybrid setups where an express elevator must stay available.</p>
+        <p class="rec-use">Use when</p>
+        <span class="rec-tag" style="background:#dbeafe;color:#1e40af">Over-provisioned fleet</span>
+        <span class="rec-tag" style="background:#dbeafe;color:#1e40af">Express + regular hybrid</span>
+        <span class="rec-tag" style="background:#dbeafe;color:#1e40af">Low or steady traffic</span>
+        <span class="rec-tag" style="background:#dbeafe;color:#1e40af">Fairness across elevators matters</span>
+        <span class="rec-tag" style="background:#dbeafe;color:#1e40af">Predictable, evenly distributed load</span>
+      </div>
+      <div class="rec-card" style="border-top:3px solid #10b981">
+        <p class="rec-head" style="color:#065f46">Zone Based — structured buildings</p>
+        <p class="rec-rule">Best when the building is organised by department or function per floor range, so traffic naturally stays within zones. Also performs well when traffic is dispersed across floors heading in the same direction (e.g. lunchtime, where it achieves the lowest avg total time). Performs poorly whenever a large group originates from the same zone or floor — all requests pile onto one elevator regardless of capacity.</p>
+        <p class="rec-use">Use when</p>
+        <span class="rec-tag" style="background:#d1fae5;color:#065f46">Floors grouped by department</span>
+        <span class="rec-tag" style="background:#d1fae5;color:#065f46">Bidirectional zoned traffic</span>
+        <span class="rec-tag" style="background:#d1fae5;color:#065f46">Predictable zone-level demand</span>
+        <p class="rec-use" style="margin-top:10px">Avoid when</p>
+        <span class="rec-tag" style="background:#fee2e2;color:#991b1b">Many passengers share a floor</span>
+        <span class="rec-tag" style="background:#fee2e2;color:#991b1b">Morning rush / lunchtime surges</span>
+        <span class="rec-tag" style="background:#fee2e2;color:#991b1b">Capacity is tight</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key insight cards -->
+  <div class="insight-grid">
+    <div class="insight-card" style="border-left-color:#f59e0b">
+      <p class="insight-head">Nearest Car wins 7 of 11 — but not always cleanly</p>
+      <p class="insight-body">NC is the safest default across all traffic types. The lunchtime scenario reveals a real tradeoff: Zone Based achieves a lower avg total time (35 ticks vs NC's 39.4) by naturally assigning each zone's downward traffic to its own elevator — but it fails to complete 2 of 15 journeys. NC's 15/15 completion record makes it the practical winner.</p>
+    </div>
+    <div class="insight-card" style="border-left-color:#3b82f6">
+      <p class="insight-head">More elevators can make things worse with NC</p>
+      <p class="insight-body">With 8 elevators and only 3 passengers, Nearest Car assigns everything to E0 since it starts at floor 1 — always the cheapest option. E1 through E7 never move, and one passenger misses the 101-tick window. Round Robin prevents this by distributing requests regardless of position.</p>
+    </div>
+    <div class="insight-card" style="border-left-color:#10b981">
+      <p class="insight-head">Zone Based's failure mode is always the same</p>
+      <p class="insight-body">In four of eleven scenarios, Zone Based leaves passengers unserved. The cause is identical every time: all passengers originate from the same floor or zone, so one elevator handles every request while the others sit idle. Morning rush, CEO visit, same floor surge, and capacity overflow all trigger this exact pattern.</p>
+    </div>
+  </div>
+
+</div><!-- /page-1 -->
+
+<!-- ═══════════════════════════ PAGE 2 ═══════════════════════════ -->
+<div id="page-2" class="page page-hidden">
+  <div style="margin-bottom:20px">
+    <p style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px;font-family:ui-monospace,monospace">INTERACTIVE EXPLORER · ALL 33 VIEWS</p>
+    <h1 style="font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px">Space-time trajectories</h1>
+    <p style="font-size:13px;color:#64748b">Every passenger shown — completed, in transit, and never boarded. Board/alight ticks sourced directly from <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px">PassengerJourney</code> objects in the running simulation.</p>
+  </div>
+  <div class="card"><p class="section-label">Scenario</p><div class="btn-group" id="sc-btns"></div></div>
+  <div class="card"><p class="section-label">Scheduling algorithm</p><div class="btn-group" id="al-btns"></div></div>
+  <div class="card">
+    <div class="info-bar" id="info-bar"></div>
+    <div class="traj-wrap"><canvas id="p2-traj" aria-label="Space-time trajectory diagram"></canvas></div>
+    <div class="leg-row" id="elev-legend"></div>
+  </div>
+  <div class="card">
+    <p class="section-label">All passenger journeys</p>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Passenger</th><th>Route</th><th>Elevator</th><th>Request</th><th>Board</th><th>Alight</th><th>Wait</th><th>Travel</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody id="pax-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const EC=['#f59e0b','#3b82f6','#10b981','#ec4899','#8b5cf6','#f97316','#06b6d4','#ef4444'];
+const AK=['nearest_car','round_robin','zone_based'];
+const AL={'nearest_car':'Nearest Car','round_robin':'Round Robin','zone_based':'Zone Based'};
+const AA={'nearest_car':'active-nc','round_robin':'active-rr','zone_based':'active-zb'};
+const UC='#94a3b8';
+const DATA={"baseline":{"meta":{"id":"baseline","label":"Baseline","desc":"2 elevators, staggered arrivals","floors":60,"num_elevators":2,"max_capacity":10},"scheds":{"nearest_car":{"eids":[0,1],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":50,"f":51,"d":"IDLE"},{"t":100,"f":51,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":11,"f":2,"d":"UP"},{"t":29,"f":20,"d":"DOWN"},{"t":48,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":51,"req":0,"board":0,"alight":49,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":37,"req":0,"board":0,"alight":35,"status":"completed"},{"id":"passenger3","eid":1,"orig":20,"dest":1,"req":10,"board":28,"alight":47,"status":"completed"}],"completed":3,"total":3},"round_robin":{"eids":[0,1],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":50,"f":51,"d":"DOWN"},{"t":100,"f":1,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":36,"f":37,"d":"IDLE"},{"t":100,"f":37,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":51,"req":0,"board":0,"alight":49,"status":"completed"},{"id":"passenger2","eid":1,"orig":1,"dest":37,"req":0,"board":0,"alight":35,"status":"completed"},{"id":"passenger3","eid":0,"orig":20,"dest":1,"req":10,"board":18,"alight":99,"status":"completed"}],"completed":3,"total":3},"zone_based":{"eids":[0,1],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":50,"f":51,"d":"DOWN"},{"t":100,"f":1,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":51,"req":0,"board":0,"alight":49,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":37,"req":0,"board":0,"alight":35,"status":"completed"},{"id":"passenger3","eid":0,"orig":20,"dest":1,"req":10,"board":18,"alight":99,"status":"completed"}],"completed":3,"total":3}}},"scenario_single_elevator":{"meta":{"id":"scenario_single_elevator","label":"Single elevator","desc":"1 elevator, 6 passengers","floors":60,"num_elevators":1,"max_capacity":5},"scheds":{"nearest_car":{"eids":[0],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":54,"f":55,"d":"DOWN"},{"t":100,"f":9,"d":"DOWN"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":40,"req":0,"board":0,"alight":38,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":55,"req":0,"board":0,"alight":53,"status":"completed"},{"id":"passenger3","eid":0,"orig":5,"dest":20,"req":0,"board":3,"alight":18,"status":"completed"},{"id":"passenger4","eid":0,"orig":30,"dest":1,"req":5,"board":28,"alight":null,"status":"in_transit"},{"id":"passenger5","eid":0,"orig":10,"dest":50,"req":10,"board":98,"alight":null,"status":"in_transit"},{"id":"passenger6","eid":0,"orig":45,"dest":2,"req":10,"board":43,"alight":null,"status":"in_transit"}],"completed":3,"total":6},"round_robin":{"eids":[0],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":54,"f":55,"d":"DOWN"},{"t":100,"f":9,"d":"DOWN"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":40,"req":0,"board":0,"alight":38,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":55,"req":0,"board":0,"alight":53,"status":"completed"},{"id":"passenger3","eid":0,"orig":5,"dest":20,"req":0,"board":3,"alight":18,"status":"completed"},{"id":"passenger4","eid":0,"orig":30,"dest":1,"req":5,"board":28,"alight":null,"status":"in_transit"},{"id":"passenger5","eid":0,"orig":10,"dest":50,"req":10,"board":98,"alight":null,"status":"in_transit"},{"id":"passenger6","eid":0,"orig":45,"dest":2,"req":10,"board":43,"alight":null,"status":"in_transit"}],"completed":3,"total":6},"zone_based":{"eids":[0],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":54,"f":55,"d":"DOWN"},{"t":100,"f":9,"d":"DOWN"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":40,"req":0,"board":0,"alight":38,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":55,"req":0,"board":0,"alight":53,"status":"completed"},{"id":"passenger3","eid":0,"orig":5,"dest":20,"req":0,"board":3,"alight":18,"status":"completed"},{"id":"passenger4","eid":0,"orig":30,"dest":1,"req":5,"board":28,"alight":null,"status":"in_transit"},{"id":"passenger5","eid":0,"orig":10,"dest":50,"req":10,"board":98,"alight":null,"status":"in_transit"},{"id":"passenger6","eid":0,"orig":45,"dest":2,"req":10,"board":43,"alight":null,"status":"in_transit"}],"completed":3,"total":6}}},"scenario_many_elevators":{"meta":{"id":"scenario_many_elevators","label":"Many elevators","desc":"8 elevators, 3 passengers","floors":60,"num_elevators":8,"max_capacity":10},"scheds":{"nearest_car":{"eids":[0,1,2,3,4,5,6,7],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":59,"f":60,"d":"DOWN"},{"t":100,"f":19,"d":"DOWN"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"3":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"4":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"5":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"6":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"7":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":60,"req":0,"board":0,"alight":58,"status":"completed"},{"id":"passenger2","eid":0,"orig":30,"dest":1,"req":0,"board":28,"alight":null,"status":"in_transit"},{"id":"passenger3","eid":0,"orig":15,"dest":45,"req":0,"board":13,"alight":43,"status":"completed"}],"completed":2,"total":3},"round_robin":{"eids":[0,1,2,3,4,5,6,7],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":59,"f":60,"d":"IDLE"},{"t":100,"f":60,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"DOWN"},{"t":58,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":44,"f":45,"d":"IDLE"},{"t":100,"f":45,"d":"IDLE"}],"3":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"4":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"5":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"6":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"7":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":60,"req":0,"board":0,"alight":58,"status":"completed"},{"id":"passenger2","eid":1,"orig":30,"dest":1,"req":0,"board":28,"alight":57,"status":"completed"},{"id":"passenger3","eid":2,"orig":15,"dest":45,"req":0,"board":13,"alight":43,"status":"completed"}],"completed":3,"total":3},"zone_based":{"eids":[0,1,2,3,4,5,6,7],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":59,"f":60,"d":"IDLE"},{"t":100,"f":60,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":44,"f":45,"d":"IDLE"},{"t":100,"f":45,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"3":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"DOWN"},{"t":58,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"4":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"5":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"6":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"7":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":60,"req":0,"board":0,"alight":58,"status":"completed"},{"id":"passenger2","eid":3,"orig":30,"dest":1,"req":0,"board":28,"alight":57,"status":"completed"},{"id":"passenger3","eid":1,"orig":15,"dest":45,"req":0,"board":13,"alight":43,"status":"completed"}],"completed":3,"total":3}}},"scenario_capacity_overflow":{"meta":{"id":"scenario_capacity_overflow","label":"Capacity overflow","desc":"8 passengers, cap 2 each","floors":60,"num_elevators":2,"max_capacity":2},"scheds":{"nearest_car":{"eids":[0,1],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":49,"f":50,"d":"DOWN"},{"t":96,"f":3,"d":"UP"},{"t":100,"f":7,"d":"UP"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"DOWN"},{"t":57,"f":2,"d":"UP"},{"t":100,"f":45,"d":"UP"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":50,"req":0,"board":0,"alight":48,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":40,"req":0,"board":0,"alight":38,"status":"completed"},{"id":"passenger3","eid":1,"orig":1,"dest":30,"req":0,"board":0,"alight":28,"status":"completed"},{"id":"passenger4","eid":1,"orig":1,"dest":20,"req":0,"board":0,"alight":18,"status":"completed"},{"id":"passenger5","eid":1,"orig":2,"dest":55,"req":0,"board":56,"alight":null,"status":"in_transit"},{"id":"passenger6","eid":1,"orig":2,"dest":45,"req":0,"board":56,"alight":99,"status":"completed"},{"id":"passenger7","eid":0,"orig":3,"dest":35,"req":0,"board":95,"alight":null,"status":"in_transit"},{"id":"passenger8","eid":0,"orig":3,"dest":25,"req":0,"board":95,"alight":null,"status":"in_transit"}],"completed":5,"total":8},"round_robin":{"eids":[0,1],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":49,"f":50,"d":"DOWN"},{"t":97,"f":2,"d":"UP"},{"t":100,"f":5,"d":"UP"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":39,"f":40,"d":"DOWN"},{"t":77,"f":2,"d":"UP"},{"t":100,"f":25,"d":"UP"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":50,"req":0,"board":0,"alight":48,"status":"completed"},{"id":"passenger2","eid":1,"orig":1,"dest":40,"req":0,"board":0,"alight":38,"status":"completed"},{"id":"passenger3","eid":0,"orig":1,"dest":30,"req":0,"board":0,"alight":28,"status":"completed"},{"id":"passenger4","eid":1,"orig":1,"dest":20,"req":0,"board":0,"alight":18,"status":"completed"},{"id":"passenger5","eid":1,"orig":2,"dest":55,"req":0,"board":76,"alight":null,"status":"in_transit"},{"id":"passenger6","eid":0,"orig":2,"dest":45,"req":0,"board":96,"alight":null,"status":"in_transit"},{"id":"passenger7","eid":1,"orig":3,"dest":35,"req":0,"board":75,"alight":null,"status":"in_transit"},{"id":"passenger8","eid":0,"orig":3,"dest":25,"req":0,"board":95,"alight":null,"status":"in_transit"}],"completed":4,"total":8},"zone_based":{"eids":[0,1],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":49,"f":50,"d":"DOWN"},{"t":98,"f":1,"d":"UP"},{"t":100,"f":3,"d":"UP"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":50,"req":0,"board":0,"alight":48,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":40,"req":0,"board":0,"alight":38,"status":"completed"},{"id":"passenger3","eid":0,"orig":1,"dest":30,"req":0,"board":97,"alight":null,"status":"in_transit"},{"id":"passenger4","eid":0,"orig":1,"dest":20,"req":0,"board":97,"alight":null,"status":"in_transit"},{"id":"passenger5","eid":null,"orig":2,"dest":55,"req":0,"board":null,"alight":null,"status":"never_boarded"},{"id":"passenger6","eid":null,"orig":2,"dest":45,"req":0,"board":null,"alight":null,"status":"never_boarded"},{"id":"passenger7","eid":null,"orig":3,"dest":35,"req":0,"board":null,"alight":null,"status":"never_boarded"},{"id":"passenger8","eid":null,"orig":3,"dest":25,"req":0,"board":null,"alight":null,"status":"never_boarded"}],"completed":2,"total":8}}},"scenario_simultaneous_same_floor":{"meta":{"id":"scenario_simultaneous_same_floor","label":"Same floor surge","desc":"6 passengers at floor 1","floors":20,"num_elevators":2,"max_capacity":5},"scheds":{"nearest_car":{"eids":[0,1],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":19,"f":20,"d":"IDLE"},{"t":100,"f":20,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":11,"f":12,"d":"IDLE"},{"t":100,"f":12,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":5,"req":0,"board":0,"alight":3,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":10,"req":0,"board":0,"alight":8,"status":"completed"},{"id":"passenger3","eid":0,"orig":1,"dest":15,"req":0,"board":0,"alight":13,"status":"completed"},{"id":"passenger4","eid":0,"orig":1,"dest":20,"req":0,"board":0,"alight":18,"status":"completed"},{"id":"passenger5","eid":0,"orig":1,"dest":8,"req":0,"board":0,"alight":6,"status":"completed"},{"id":"passenger6","eid":1,"orig":1,"dest":12,"req":0,"board":0,"alight":10,"status":"completed"}],"completed":6,"total":6},"round_robin":{"eids":[0,1],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":14,"f":15,"d":"IDLE"},{"t":100,"f":15,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":19,"f":20,"d":"IDLE"},{"t":100,"f":20,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":5,"req":0,"board":0,"alight":3,"status":"completed"},{"id":"passenger2","eid":1,"orig":1,"dest":10,"req":0,"board":0,"alight":8,"status":"completed"},{"id":"passenger3","eid":0,"orig":1,"dest":15,"req":0,"board":0,"alight":13,"status":"completed"},{"id":"passenger4","eid":1,"orig":1,"dest":20,"req":0,"board":0,"alight":18,"status":"completed"},{"id":"passenger5","eid":0,"orig":1,"dest":8,"req":0,"board":0,"alight":6,"status":"completed"},{"id":"passenger6","eid":1,"orig":1,"dest":12,"req":0,"board":0,"alight":10,"status":"completed"}],"completed":6,"total":6},"zone_based":{"eids":[0,1],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":19,"f":20,"d":"DOWN"},{"t":38,"f":1,"d":"UP"},{"t":49,"f":12,"d":"IDLE"},{"t":100,"f":12,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":5,"req":0,"board":0,"alight":3,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":10,"req":0,"board":0,"alight":8,"status":"completed"},{"id":"passenger3","eid":0,"orig":1,"dest":15,"req":0,"board":0,"alight":13,"status":"completed"},{"id":"passenger4","eid":0,"orig":1,"dest":20,"req":0,"board":0,"alight":18,"status":"completed"},{"id":"passenger5","eid":0,"orig":1,"dest":8,"req":0,"board":0,"alight":6,"status":"completed"},{"id":"passenger6","eid":0,"orig":1,"dest":12,"req":0,"board":37,"alight":48,"status":"completed"}],"completed":6,"total":6}}},"scenario_bidirectional":{"meta":{"id":"scenario_bidirectional","label":"Bidirectional","desc":"3 elevators, mixed traffic","floors":30,"num_elevators":3,"max_capacity":4},"scheds":{"nearest_car":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"DOWN"},{"t":58,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":27,"f":28,"d":"DOWN"},{"t":52,"f":3,"d":"IDLE"},{"t":100,"f":3,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"passenger2","eid":0,"orig":25,"dest":1,"req":0,"board":23,"alight":57,"status":"completed"},{"id":"passenger3","eid":0,"orig":1,"dest":30,"req":0,"board":0,"alight":28,"status":"completed"},{"id":"passenger4","eid":0,"orig":30,"dest":1,"req":0,"board":28,"alight":57,"status":"completed"},{"id":"passenger5","eid":1,"orig":15,"dest":5,"req":0,"board":13,"alight":49,"status":"completed"},{"id":"passenger6","eid":1,"orig":5,"dest":20,"req":0,"board":3,"alight":18,"status":"completed"},{"id":"passenger7","eid":1,"orig":10,"dest":28,"req":5,"board":8,"alight":26,"status":"completed"},{"id":"passenger8","eid":1,"orig":20,"dest":3,"req":5,"board":18,"alight":51,"status":"completed"}],"completed":8,"total":8},"round_robin":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"DOWN"},{"t":58,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":24,"f":25,"d":"DOWN"},{"t":48,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"IDLE"},{"t":100,"f":30,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"passenger2","eid":1,"orig":25,"dest":1,"req":0,"board":23,"alight":47,"status":"completed"},{"id":"passenger3","eid":2,"orig":1,"dest":30,"req":0,"board":0,"alight":28,"status":"completed"},{"id":"passenger4","eid":0,"orig":30,"dest":1,"req":0,"board":28,"alight":57,"status":"completed"},{"id":"passenger5","eid":1,"orig":15,"dest":5,"req":0,"board":13,"alight":43,"status":"completed"},{"id":"passenger6","eid":2,"orig":5,"dest":20,"req":0,"board":3,"alight":18,"status":"completed"},{"id":"passenger7","eid":0,"orig":10,"dest":28,"req":5,"board":8,"alight":26,"status":"completed"},{"id":"passenger8","eid":1,"orig":20,"dest":3,"req":5,"board":18,"alight":45,"status":"completed"}],"completed":8,"total":8},"zone_based":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"IDLE"},{"t":100,"f":30,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":19,"f":20,"d":"DOWN"},{"t":36,"f":3,"d":"IDLE"},{"t":100,"f":3,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"DOWN"},{"t":58,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"passenger2","eid":2,"orig":25,"dest":1,"req":0,"board":23,"alight":57,"status":"completed"},{"id":"passenger3","eid":0,"orig":1,"dest":30,"req":0,"board":0,"alight":28,"status":"completed"},{"id":"passenger4","eid":2,"orig":30,"dest":1,"req":0,"board":28,"alight":57,"status":"completed"},{"id":"passenger5","eid":1,"orig":15,"dest":5,"req":0,"board":13,"alight":33,"status":"completed"},{"id":"passenger6","eid":0,"orig":5,"dest":20,"req":0,"board":3,"alight":18,"status":"completed"},{"id":"passenger7","eid":0,"orig":10,"dest":28,"req":5,"board":8,"alight":26,"status":"completed"},{"id":"passenger8","eid":1,"orig":20,"dest":3,"req":5,"board":18,"alight":35,"status":"completed"}],"completed":8,"total":8}}},"scenario_express_elevator":{"meta":{"id":"scenario_express_elevator","label":"Express elevator","desc":"1 express + 2 regular, 60 floors","floors":60,"num_elevators":3,"max_capacity":5,"express_floors":[1,20,40,60]},"scheds":{"nearest_car":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":44,"f":45,"d":"IDLE"},{"t":100,"f":45,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":6,"f":2,"d":"UP"},{"t":39,"f":35,"d":"IDLE"},{"t":100,"f":35,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":59,"f":60,"d":"DOWN"},{"t":100,"f":19,"d":"DOWN"}]},"events":[{"id":"passenger1","eid":2,"orig":1,"dest":60,"req":0,"board":0,"alight":58,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"passenger3","eid":2,"orig":20,"dest":40,"req":0,"board":18,"alight":38,"status":"completed"},{"id":"passenger4","eid":1,"orig":5,"dest":35,"req":5,"board":8,"alight":38,"status":"completed"},{"id":"passenger5","eid":2,"orig":1,"dest":20,"req":5,"board":null,"alight":null,"status":"never_boarded"},{"id":"passenger6","eid":2,"orig":40,"dest":1,"req":10,"board":38,"alight":null,"status":"in_transit"},{"id":"passenger7","eid":0,"orig":15,"dest":45,"req":10,"board":13,"alight":43,"status":"completed"}],"completed":5,"total":7},"round_robin":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":59,"f":60,"d":"DOWN"},{"t":100,"f":19,"d":"DOWN"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":24,"f":25,"d":"DOWN"},{"t":48,"f":1,"d":"UP"},{"t":67,"f":20,"d":"IDLE"},{"t":100,"f":20,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":39,"f":40,"d":"DOWN"},{"t":78,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":60,"req":0,"board":0,"alight":58,"status":"completed"},{"id":"passenger2","eid":1,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"passenger3","eid":2,"orig":20,"dest":40,"req":0,"board":18,"alight":38,"status":"completed"},{"id":"passenger4","eid":0,"orig":5,"dest":35,"req":5,"board":null,"alight":null,"status":"never_boarded"},{"id":"passenger5","eid":1,"orig":1,"dest":20,"req":5,"board":47,"alight":66,"status":"completed"},{"id":"passenger6","eid":2,"orig":40,"dest":1,"req":10,"board":38,"alight":77,"status":"completed"},{"id":"passenger7","eid":0,"orig":15,"dest":45,"req":10,"board":13,"alight":43,"status":"completed"}],"completed":6,"total":7},"zone_based":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":59,"f":60,"d":"DOWN"},{"t":100,"f":19,"d":"DOWN"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":11,"f":2,"d":"UP"},{"t":49,"f":40,"d":"DOWN"},{"t":88,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"passenger1","eid":0,"orig":1,"dest":60,"req":0,"board":0,"alight":58,"status":"completed"},{"id":"passenger2","eid":0,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"passenger3","eid":0,"orig":20,"dest":40,"req":0,"board":18,"alight":38,"status":"completed"},{"id":"passenger4","eid":0,"orig":5,"dest":35,"req":5,"board":null,"alight":null,"status":"never_boarded"},{"id":"passenger5","eid":0,"orig":1,"dest":20,"req":5,"board":null,"alight":null,"status":"never_boarded"},{"id":"passenger6","eid":1,"orig":40,"dest":1,"req":10,"board":48,"alight":87,"status":"completed"},{"id":"passenger7","eid":0,"orig":15,"dest":45,"req":10,"board":null,"alight":null,"status":"never_boarded"}],"completed":4,"total":7}}},"scenario_morning_rush":{"meta":{"id":"scenario_morning_rush","label":"Morning rush","desc":"15 passengers, floor 1 \u2192 upper floors","floors":30,"num_elevators":3,"max_capacity":4},"scheds":{"nearest_car":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":8,"f":9,"d":"DOWN"},{"t":16,"f":1,"d":"UP"},{"t":45,"f":30,"d":"IDLE"},{"t":100,"f":30,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":16,"f":17,"d":"IDLE"},{"t":100,"f":17,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":24,"f":25,"d":"IDLE"},{"t":100,"f":25,"d":"IDLE"}]},"events":[{"id":"p1","eid":0,"orig":1,"dest":3,"req":0,"board":0,"alight":1,"status":"completed"},{"id":"p2","eid":0,"orig":1,"dest":5,"req":0,"board":0,"alight":3,"status":"completed"},{"id":"p3","eid":0,"orig":1,"dest":7,"req":0,"board":0,"alight":5,"status":"completed"},{"id":"p4","eid":0,"orig":1,"dest":9,"req":0,"board":0,"alight":7,"status":"completed"},{"id":"p5","eid":1,"orig":1,"dest":11,"req":0,"board":0,"alight":9,"status":"completed"},{"id":"p6","eid":1,"orig":1,"dest":13,"req":0,"board":0,"alight":11,"status":"completed"},{"id":"p7","eid":1,"orig":1,"dest":15,"req":0,"board":0,"alight":13,"status":"completed"},{"id":"p8","eid":1,"orig":1,"dest":17,"req":0,"board":0,"alight":15,"status":"completed"},{"id":"p9","eid":2,"orig":1,"dest":19,"req":0,"board":0,"alight":17,"status":"completed"},{"id":"p10","eid":2,"orig":1,"dest":21,"req":0,"board":0,"alight":19,"status":"completed"},{"id":"p11","eid":2,"orig":1,"dest":23,"req":0,"board":0,"alight":21,"status":"completed"},{"id":"p12","eid":2,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"p13","eid":0,"orig":1,"dest":27,"req":0,"board":15,"alight":41,"status":"completed"},{"id":"p14","eid":0,"orig":1,"dest":29,"req":0,"board":15,"alight":43,"status":"completed"},{"id":"p15","eid":0,"orig":1,"dest":30,"req":0,"board":15,"alight":44,"status":"completed"}],"completed":15,"total":15},"round_robin":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":20,"f":21,"d":"DOWN"},{"t":40,"f":1,"d":"UP"},{"t":66,"f":27,"d":"IDLE"},{"t":100,"f":27,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":22,"f":23,"d":"DOWN"},{"t":44,"f":1,"d":"UP"},{"t":72,"f":29,"d":"IDLE"},{"t":100,"f":29,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":24,"f":25,"d":"DOWN"},{"t":48,"f":1,"d":"UP"},{"t":77,"f":30,"d":"IDLE"},{"t":100,"f":30,"d":"IDLE"}]},"events":[{"id":"p1","eid":0,"orig":1,"dest":3,"req":0,"board":0,"alight":1,"status":"completed"},{"id":"p2","eid":1,"orig":1,"dest":5,"req":0,"board":0,"alight":3,"status":"completed"},{"id":"p3","eid":2,"orig":1,"dest":7,"req":0,"board":0,"alight":5,"status":"completed"},{"id":"p4","eid":0,"orig":1,"dest":9,"req":0,"board":0,"alight":7,"status":"completed"},{"id":"p5","eid":1,"orig":1,"dest":11,"req":0,"board":0,"alight":9,"status":"completed"},{"id":"p6","eid":2,"orig":1,"dest":13,"req":0,"board":0,"alight":11,"status":"completed"},{"id":"p7","eid":0,"orig":1,"dest":15,"req":0,"board":0,"alight":13,"status":"completed"},{"id":"p8","eid":1,"orig":1,"dest":17,"req":0,"board":0,"alight":15,"status":"completed"},{"id":"p9","eid":2,"orig":1,"dest":19,"req":0,"board":0,"alight":17,"status":"completed"},{"id":"p10","eid":0,"orig":1,"dest":21,"req":0,"board":0,"alight":19,"status":"completed"},{"id":"p11","eid":1,"orig":1,"dest":23,"req":0,"board":0,"alight":21,"status":"completed"},{"id":"p12","eid":2,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"p13","eid":0,"orig":1,"dest":27,"req":0,"board":39,"alight":65,"status":"completed"},{"id":"p14","eid":1,"orig":1,"dest":29,"req":0,"board":43,"alight":71,"status":"completed"},{"id":"p15","eid":2,"orig":1,"dest":30,"req":0,"board":47,"alight":76,"status":"completed"}],"completed":15,"total":15},"zone_based":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":8,"f":9,"d":"DOWN"},{"t":16,"f":1,"d":"UP"},{"t":32,"f":17,"d":"DOWN"},{"t":48,"f":1,"d":"UP"},{"t":72,"f":25,"d":"DOWN"},{"t":96,"f":1,"d":"UP"},{"t":100,"f":5,"d":"UP"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"p1","eid":0,"orig":1,"dest":3,"req":0,"board":0,"alight":1,"status":"completed"},{"id":"p2","eid":0,"orig":1,"dest":5,"req":0,"board":0,"alight":3,"status":"completed"},{"id":"p3","eid":0,"orig":1,"dest":7,"req":0,"board":0,"alight":5,"status":"completed"},{"id":"p4","eid":0,"orig":1,"dest":9,"req":0,"board":0,"alight":7,"status":"completed"},{"id":"p5","eid":0,"orig":1,"dest":11,"req":0,"board":15,"alight":25,"status":"completed"},{"id":"p6","eid":0,"orig":1,"dest":13,"req":0,"board":15,"alight":27,"status":"completed"},{"id":"p7","eid":0,"orig":1,"dest":15,"req":0,"board":15,"alight":29,"status":"completed"},{"id":"p8","eid":0,"orig":1,"dest":17,"req":0,"board":15,"alight":31,"status":"completed"},{"id":"p9","eid":0,"orig":1,"dest":19,"req":0,"board":47,"alight":65,"status":"completed"},{"id":"p10","eid":0,"orig":1,"dest":21,"req":0,"board":47,"alight":67,"status":"completed"},{"id":"p11","eid":0,"orig":1,"dest":23,"req":0,"board":47,"alight":69,"status":"completed"},{"id":"p12","eid":0,"orig":1,"dest":25,"req":0,"board":47,"alight":71,"status":"completed"},{"id":"p13","eid":0,"orig":1,"dest":27,"req":0,"board":95,"alight":null,"status":"in_transit"},{"id":"p14","eid":0,"orig":1,"dest":29,"req":0,"board":95,"alight":null,"status":"in_transit"},{"id":"p15","eid":0,"orig":1,"dest":30,"req":0,"board":95,"alight":null,"status":"in_transit"}],"completed":12,"total":15}}},"scenario_lunchtime":{"meta":{"id":"scenario_lunchtime","label":"Lunchtime","desc":"15 passengers, upper floors \u2192 floor 1","floors":30,"num_elevators":3,"max_capacity":4},"scheds":{"nearest_car":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":8,"f":9,"d":"DOWN"},{"t":16,"f":1,"d":"IDLE"},{"t":17,"f":2,"d":"UP"},{"t":45,"f":30,"d":"DOWN"},{"t":74,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":16,"f":17,"d":"DOWN"},{"t":32,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":24,"f":25,"d":"DOWN"},{"t":48,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"p1","eid":0,"orig":3,"dest":1,"req":0,"board":1,"alight":15,"status":"completed"},{"id":"p2","eid":0,"orig":5,"dest":1,"req":0,"board":3,"alight":15,"status":"completed"},{"id":"p3","eid":0,"orig":7,"dest":1,"req":0,"board":5,"alight":15,"status":"completed"},{"id":"p4","eid":0,"orig":9,"dest":1,"req":0,"board":7,"alight":15,"status":"completed"},{"id":"p5","eid":1,"orig":11,"dest":1,"req":0,"board":9,"alight":31,"status":"completed"},{"id":"p6","eid":1,"orig":13,"dest":1,"req":0,"board":11,"alight":31,"status":"completed"},{"id":"p7","eid":1,"orig":15,"dest":1,"req":0,"board":13,"alight":31,"status":"completed"},{"id":"p8","eid":1,"orig":17,"dest":1,"req":0,"board":15,"alight":31,"status":"completed"},{"id":"p9","eid":2,"orig":19,"dest":1,"req":0,"board":17,"alight":47,"status":"completed"},{"id":"p10","eid":2,"orig":21,"dest":1,"req":0,"board":19,"alight":47,"status":"completed"},{"id":"p11","eid":2,"orig":23,"dest":1,"req":0,"board":21,"alight":47,"status":"completed"},{"id":"p12","eid":2,"orig":25,"dest":1,"req":0,"board":23,"alight":47,"status":"completed"},{"id":"p13","eid":0,"orig":27,"dest":1,"req":0,"board":41,"alight":73,"status":"completed"},{"id":"p14","eid":0,"orig":29,"dest":1,"req":0,"board":43,"alight":73,"status":"completed"},{"id":"p15","eid":0,"orig":30,"dest":1,"req":0,"board":44,"alight":73,"status":"completed"}],"completed":15,"total":15},"round_robin":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":20,"f":21,"d":"DOWN"},{"t":40,"f":1,"d":"IDLE"},{"t":41,"f":2,"d":"UP"},{"t":69,"f":30,"d":"DOWN"},{"t":98,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":22,"f":23,"d":"DOWN"},{"t":44,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":24,"f":25,"d":"DOWN"},{"t":48,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"p1","eid":0,"orig":3,"dest":1,"req":0,"board":1,"alight":39,"status":"completed"},{"id":"p2","eid":1,"orig":5,"dest":1,"req":0,"board":3,"alight":43,"status":"completed"},{"id":"p3","eid":2,"orig":7,"dest":1,"req":0,"board":5,"alight":47,"status":"completed"},{"id":"p4","eid":0,"orig":9,"dest":1,"req":0,"board":7,"alight":39,"status":"completed"},{"id":"p5","eid":1,"orig":11,"dest":1,"req":0,"board":9,"alight":43,"status":"completed"},{"id":"p6","eid":2,"orig":13,"dest":1,"req":0,"board":11,"alight":47,"status":"completed"},{"id":"p7","eid":0,"orig":15,"dest":1,"req":0,"board":13,"alight":39,"status":"completed"},{"id":"p8","eid":1,"orig":17,"dest":1,"req":0,"board":15,"alight":43,"status":"completed"},{"id":"p9","eid":2,"orig":19,"dest":1,"req":0,"board":17,"alight":47,"status":"completed"},{"id":"p10","eid":0,"orig":21,"dest":1,"req":0,"board":19,"alight":39,"status":"completed"},{"id":"p11","eid":1,"orig":23,"dest":1,"req":0,"board":21,"alight":43,"status":"completed"},{"id":"p12","eid":2,"orig":25,"dest":1,"req":0,"board":23,"alight":47,"status":"completed"},{"id":"p13","eid":0,"orig":27,"dest":1,"req":0,"board":65,"alight":97,"status":"completed"},{"id":"p14","eid":0,"orig":29,"dest":1,"req":0,"board":67,"alight":97,"status":"completed"},{"id":"p15","eid":0,"orig":30,"dest":1,"req":0,"board":68,"alight":97,"status":"completed"}],"completed":15,"total":15},"zone_based":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":8,"f":9,"d":"DOWN"},{"t":16,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":16,"f":17,"d":"DOWN"},{"t":32,"f":1,"d":"IDLE"},{"t":33,"f":2,"d":"UP"},{"t":50,"f":19,"d":"DOWN"},{"t":68,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":26,"f":27,"d":"DOWN"},{"t":52,"f":1,"d":"IDLE"},{"t":53,"f":2,"d":"UP"},{"t":81,"f":30,"d":"DOWN"},{"t":100,"f":11,"d":"DOWN"}]},"events":[{"id":"p1","eid":0,"orig":3,"dest":1,"req":0,"board":1,"alight":15,"status":"completed"},{"id":"p2","eid":0,"orig":5,"dest":1,"req":0,"board":3,"alight":15,"status":"completed"},{"id":"p3","eid":0,"orig":7,"dest":1,"req":0,"board":5,"alight":15,"status":"completed"},{"id":"p4","eid":0,"orig":9,"dest":1,"req":0,"board":7,"alight":15,"status":"completed"},{"id":"p5","eid":1,"orig":11,"dest":1,"req":0,"board":9,"alight":31,"status":"completed"},{"id":"p6","eid":1,"orig":13,"dest":1,"req":0,"board":11,"alight":31,"status":"completed"},{"id":"p7","eid":1,"orig":15,"dest":1,"req":0,"board":13,"alight":31,"status":"completed"},{"id":"p8","eid":1,"orig":17,"dest":1,"req":0,"board":15,"alight":31,"status":"completed"},{"id":"p9","eid":1,"orig":19,"dest":1,"req":0,"board":49,"alight":67,"status":"completed"},{"id":"p10","eid":2,"orig":21,"dest":1,"req":0,"board":19,"alight":51,"status":"completed"},{"id":"p11","eid":2,"orig":23,"dest":1,"req":0,"board":21,"alight":51,"status":"completed"},{"id":"p12","eid":2,"orig":25,"dest":1,"req":0,"board":23,"alight":51,"status":"completed"},{"id":"p13","eid":2,"orig":27,"dest":1,"req":0,"board":25,"alight":51,"status":"completed"},{"id":"p14","eid":2,"orig":29,"dest":1,"req":0,"board":79,"alight":null,"status":"in_transit"},{"id":"p15","eid":2,"orig":30,"dest":1,"req":0,"board":80,"alight":null,"status":"in_transit"}],"completed":13,"total":15}}},"scenario_townhall":{"meta":{"id":"scenario_townhall","label":"Town hall","desc":"15 passengers converging on floor 15","floors":30,"num_elevators":3,"max_capacity":4},"scheds":{"nearest_car":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":14,"f":15,"d":"IDLE"},{"t":15,"f":16,"d":"UP"},{"t":29,"f":30,"d":"DOWN"},{"t":44,"f":15,"d":"IDLE"},{"t":100,"f":15,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":16,"f":17,"d":"DOWN"},{"t":18,"f":15,"d":"IDLE"},{"t":100,"f":15,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":24,"f":25,"d":"DOWN"},{"t":34,"f":15,"d":"IDLE"},{"t":100,"f":15,"d":"IDLE"}]},"events":[{"id":"p1","eid":0,"orig":1,"dest":15,"req":0,"board":0,"alight":13,"status":"completed"},{"id":"p2","eid":0,"orig":3,"dest":15,"req":0,"board":1,"alight":13,"status":"completed"},{"id":"p3","eid":0,"orig":5,"dest":15,"req":0,"board":3,"alight":13,"status":"completed"},{"id":"p4","eid":0,"orig":7,"dest":15,"req":0,"board":5,"alight":13,"status":"completed"},{"id":"p5","eid":1,"orig":9,"dest":15,"req":0,"board":7,"alight":13,"status":"completed"},{"id":"p6","eid":1,"orig":11,"dest":15,"req":0,"board":9,"alight":13,"status":"completed"},{"id":"p7","eid":1,"orig":13,"dest":15,"req":0,"board":11,"alight":13,"status":"completed"},{"id":"p8","eid":1,"orig":17,"dest":15,"req":0,"board":15,"alight":17,"status":"completed"},{"id":"p9","eid":2,"orig":19,"dest":15,"req":0,"board":17,"alight":33,"status":"completed"},{"id":"p10","eid":2,"orig":21,"dest":15,"req":0,"board":19,"alight":33,"status":"completed"},{"id":"p11","eid":2,"orig":23,"dest":15,"req":0,"board":21,"alight":33,"status":"completed"},{"id":"p12","eid":2,"orig":25,"dest":15,"req":0,"board":23,"alight":33,"status":"completed"},{"id":"p13","eid":0,"orig":27,"dest":15,"req":0,"board":25,"alight":43,"status":"completed"},{"id":"p14","eid":0,"orig":29,"dest":15,"req":0,"board":27,"alight":43,"status":"completed"},{"id":"p15","eid":0,"orig":30,"dest":15,"req":0,"board":28,"alight":43,"status":"completed"}],"completed":15,"total":15},"round_robin":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":26,"f":27,"d":"DOWN"},{"t":38,"f":15,"d":"IDLE"},{"t":100,"f":15,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":28,"f":29,"d":"DOWN"},{"t":42,"f":15,"d":"IDLE"},{"t":100,"f":15,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"DOWN"},{"t":44,"f":15,"d":"IDLE"},{"t":100,"f":15,"d":"IDLE"}]},"events":[{"id":"p1","eid":0,"orig":1,"dest":15,"req":0,"board":0,"alight":13,"status":"completed"},{"id":"p2","eid":1,"orig":3,"dest":15,"req":0,"board":1,"alight":13,"status":"completed"},{"id":"p3","eid":2,"orig":5,"dest":15,"req":0,"board":3,"alight":13,"status":"completed"},{"id":"p4","eid":0,"orig":7,"dest":15,"req":0,"board":5,"alight":13,"status":"completed"},{"id":"p5","eid":1,"orig":9,"dest":15,"req":0,"board":7,"alight":13,"status":"completed"},{"id":"p6","eid":2,"orig":11,"dest":15,"req":0,"board":9,"alight":13,"status":"completed"},{"id":"p7","eid":0,"orig":13,"dest":15,"req":0,"board":11,"alight":13,"status":"completed"},{"id":"p8","eid":1,"orig":17,"dest":15,"req":0,"board":15,"alight":41,"status":"completed"},{"id":"p9","eid":2,"orig":19,"dest":15,"req":0,"board":17,"alight":43,"status":"completed"},{"id":"p10","eid":0,"orig":21,"dest":15,"req":0,"board":19,"alight":37,"status":"completed"},{"id":"p11","eid":1,"orig":23,"dest":15,"req":0,"board":21,"alight":41,"status":"completed"},{"id":"p12","eid":2,"orig":25,"dest":15,"req":0,"board":23,"alight":43,"status":"completed"},{"id":"p13","eid":0,"orig":27,"dest":15,"req":0,"board":25,"alight":37,"status":"completed"},{"id":"p14","eid":1,"orig":29,"dest":15,"req":0,"board":27,"alight":41,"status":"completed"},{"id":"p15","eid":2,"orig":30,"dest":15,"req":0,"board":28,"alight":43,"status":"completed"}],"completed":15,"total":15},"zone_based":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":14,"f":15,"d":"IDLE"},{"t":15,"f":14,"d":"DOWN"},{"t":20,"f":9,"d":"UP"},{"t":26,"f":15,"d":"IDLE"},{"t":100,"f":15,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":18,"f":19,"d":"DOWN"},{"t":22,"f":15,"d":"IDLE"},{"t":100,"f":15,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":26,"f":27,"d":"DOWN"},{"t":38,"f":15,"d":"IDLE"},{"t":39,"f":16,"d":"UP"},{"t":53,"f":30,"d":"DOWN"},{"t":68,"f":15,"d":"IDLE"},{"t":100,"f":15,"d":"IDLE"}]},"events":[{"id":"p1","eid":0,"orig":1,"dest":15,"req":0,"board":0,"alight":13,"status":"completed"},{"id":"p2","eid":0,"orig":3,"dest":15,"req":0,"board":1,"alight":13,"status":"completed"},{"id":"p3","eid":0,"orig":5,"dest":15,"req":0,"board":3,"alight":13,"status":"completed"},{"id":"p4","eid":0,"orig":7,"dest":15,"req":0,"board":5,"alight":13,"status":"completed"},{"id":"p5","eid":0,"orig":9,"dest":15,"req":0,"board":19,"alight":25,"status":"completed"},{"id":"p6","eid":1,"orig":11,"dest":15,"req":0,"board":9,"alight":13,"status":"completed"},{"id":"p7","eid":1,"orig":13,"dest":15,"req":0,"board":11,"alight":13,"status":"completed"},{"id":"p8","eid":1,"orig":17,"dest":15,"req":0,"board":15,"alight":21,"status":"completed"},{"id":"p9","eid":1,"orig":19,"dest":15,"req":0,"board":17,"alight":21,"status":"completed"},{"id":"p10","eid":2,"orig":21,"dest":15,"req":0,"board":19,"alight":37,"status":"completed"},{"id":"p11","eid":2,"orig":23,"dest":15,"req":0,"board":21,"alight":37,"status":"completed"},{"id":"p12","eid":2,"orig":25,"dest":15,"req":0,"board":23,"alight":37,"status":"completed"},{"id":"p13","eid":2,"orig":27,"dest":15,"req":0,"board":25,"alight":37,"status":"completed"},{"id":"p14","eid":2,"orig":29,"dest":15,"req":0,"board":51,"alight":67,"status":"completed"},{"id":"p15","eid":2,"orig":30,"dest":15,"req":0,"board":52,"alight":67,"status":"completed"}],"completed":15,"total":15}}},"scenario_ceo_visit":{"meta":{"id":"scenario_ceo_visit","label":"CEO visit","desc":"16 passengers, express lane for execs","floors":30,"num_elevators":3,"max_capacity":4,"express_floors":[1,25,28,30]},"scheds":{"nearest_car":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":8,"f":9,"d":"DOWN"},{"t":16,"f":1,"d":"UP"},{"t":42,"f":27,"d":"IDLE"},{"t":100,"f":27,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":16,"f":17,"d":"IDLE"},{"t":100,"f":17,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"IDLE"},{"t":100,"f":30,"d":"IDLE"}]},"events":[{"id":"ceo","eid":2,"orig":1,"dest":28,"req":0,"board":0,"alight":26,"status":"completed"},{"id":"exec1","eid":2,"orig":1,"dest":30,"req":0,"board":0,"alight":28,"status":"completed"},{"id":"exec2","eid":2,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"exec3","eid":2,"orig":1,"dest":28,"req":0,"board":0,"alight":26,"status":"completed"},{"id":"p1","eid":0,"orig":1,"dest":3,"req":0,"board":0,"alight":1,"status":"completed"},{"id":"p2","eid":0,"orig":1,"dest":5,"req":0,"board":0,"alight":3,"status":"completed"},{"id":"p3","eid":0,"orig":1,"dest":7,"req":0,"board":0,"alight":5,"status":"completed"},{"id":"p4","eid":0,"orig":1,"dest":9,"req":0,"board":0,"alight":7,"status":"completed"},{"id":"p5","eid":1,"orig":1,"dest":11,"req":0,"board":0,"alight":9,"status":"completed"},{"id":"p6","eid":1,"orig":1,"dest":13,"req":0,"board":0,"alight":11,"status":"completed"},{"id":"p7","eid":1,"orig":1,"dest":15,"req":0,"board":0,"alight":13,"status":"completed"},{"id":"p8","eid":1,"orig":1,"dest":17,"req":0,"board":0,"alight":15,"status":"completed"},{"id":"p9","eid":0,"orig":1,"dest":19,"req":0,"board":15,"alight":33,"status":"completed"},{"id":"p10","eid":0,"orig":1,"dest":21,"req":0,"board":15,"alight":35,"status":"completed"},{"id":"p11","eid":0,"orig":1,"dest":23,"req":0,"board":15,"alight":37,"status":"completed"},{"id":"p12","eid":0,"orig":1,"dest":27,"req":0,"board":15,"alight":41,"status":"completed"}],"completed":16,"total":16},"round_robin":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":27,"f":28,"d":"DOWN"},{"t":54,"f":1,"d":"UP"},{"t":80,"f":27,"d":"IDLE"},{"t":100,"f":27,"d":"IDLE"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"DOWN"},{"t":58,"f":1,"d":"UP"},{"t":78,"f":21,"d":"IDLE"},{"t":100,"f":21,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":24,"f":25,"d":"IDLE"},{"t":100,"f":25,"d":"IDLE"}]},"events":[{"id":"ceo","eid":0,"orig":1,"dest":28,"req":0,"board":0,"alight":26,"status":"completed"},{"id":"exec1","eid":1,"orig":1,"dest":30,"req":0,"board":0,"alight":28,"status":"completed"},{"id":"exec2","eid":2,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"exec3","eid":0,"orig":1,"dest":28,"req":0,"board":0,"alight":26,"status":"completed"},{"id":"p1","eid":1,"orig":1,"dest":3,"req":0,"board":0,"alight":1,"status":"completed"},{"id":"p2","eid":0,"orig":1,"dest":5,"req":0,"board":0,"alight":3,"status":"completed"},{"id":"p3","eid":1,"orig":1,"dest":7,"req":0,"board":0,"alight":5,"status":"completed"},{"id":"p4","eid":0,"orig":1,"dest":9,"req":0,"board":0,"alight":7,"status":"completed"},{"id":"p5","eid":1,"orig":1,"dest":11,"req":0,"board":0,"alight":9,"status":"completed"},{"id":"p6","eid":1,"orig":1,"dest":13,"req":0,"board":57,"alight":69,"status":"completed"},{"id":"p7","eid":0,"orig":1,"dest":15,"req":0,"board":53,"alight":67,"status":"completed"},{"id":"p8","eid":1,"orig":1,"dest":17,"req":0,"board":57,"alight":73,"status":"completed"},{"id":"p9","eid":0,"orig":1,"dest":19,"req":0,"board":53,"alight":71,"status":"completed"},{"id":"p10","eid":1,"orig":1,"dest":21,"req":0,"board":57,"alight":77,"status":"completed"},{"id":"p11","eid":0,"orig":1,"dest":23,"req":0,"board":53,"alight":75,"status":"completed"},{"id":"p12","eid":0,"orig":1,"dest":27,"req":0,"board":53,"alight":79,"status":"completed"}],"completed":16,"total":16},"zone_based":{"eids":[0,1,2],"wp":{"0":[{"t":0,"f":1,"d":"IDLE"},{"t":1,"f":2,"d":"UP"},{"t":29,"f":30,"d":"DOWN"},{"t":58,"f":1,"d":"UP"},{"t":66,"f":9,"d":"DOWN"},{"t":74,"f":1,"d":"UP"},{"t":90,"f":17,"d":"DOWN"},{"t":100,"f":7,"d":"DOWN"}],"1":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}],"2":[{"t":0,"f":1,"d":"IDLE"},{"t":100,"f":1,"d":"IDLE"}]},"events":[{"id":"ceo","eid":0,"orig":1,"dest":28,"req":0,"board":0,"alight":26,"status":"completed"},{"id":"exec1","eid":0,"orig":1,"dest":30,"req":0,"board":0,"alight":28,"status":"completed"},{"id":"exec2","eid":0,"orig":1,"dest":25,"req":0,"board":0,"alight":23,"status":"completed"},{"id":"exec3","eid":0,"orig":1,"dest":28,"req":0,"board":0,"alight":26,"status":"completed"},{"id":"p1","eid":0,"orig":1,"dest":3,"req":0,"board":57,"alight":59,"status":"completed"},{"id":"p2","eid":0,"orig":1,"dest":5,"req":0,"board":57,"alight":61,"status":"completed"},{"id":"p3","eid":0,"orig":1,"dest":7,"req":0,"board":57,"alight":63,"status":"completed"},{"id":"p4","eid":0,"orig":1,"dest":9,"req":0,"board":57,"alight":65,"status":"completed"},{"id":"p5","eid":0,"orig":1,"dest":11,"req":0,"board":73,"alight":83,"status":"completed"},{"id":"p6","eid":0,"orig":1,"dest":13,"req":0,"board":73,"alight":85,"status":"completed"},{"id":"p7","eid":0,"orig":1,"dest":15,"req":0,"board":73,"alight":87,"status":"completed"},{"id":"p8","eid":0,"orig":1,"dest":17,"req":0,"board":73,"alight":89,"status":"completed"},{"id":"p9","eid":0,"orig":1,"dest":19,"req":0,"board":null,"alight":null,"status":"never_boarded"},{"id":"p10","eid":0,"orig":1,"dest":21,"req":0,"board":null,"alight":null,"status":"never_boarded"},{"id":"p11","eid":0,"orig":1,"dest":23,"req":0,"board":null,"alight":null,"status":"never_boarded"},{"id":"p12","eid":0,"orig":1,"dest":27,"req":0,"board":null,"alight":null,"status":"never_boarded"}],"completed":12,"total":16}}}};
+
+function drawTraj(id,sc,al){
+  const sd=DATA[sc]&&DATA[sc].scheds[al];if(!sd)return;
+  const meta=DATA[sc].meta;
+  const cv=document.getElementById(id);if(!cv)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.parentElement.clientWidth||600;
+  const H=Math.max(220,Math.min(340,meta.floors*5));
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const dk=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const BG=dk?'#0f172a':'#f8fafc',GR=dk?'rgba(255,255,255,.05)':'rgba(0,0,0,.055)';
+  const AX=dk?'#334155':'#cbd5e1',TX=dk?'#64748b':'#94a3b8';
+  const IC=dk?'#1e293b':'#e2e8f0',LB=dk?'rgba(15,23,42,.93)':'rgba(248,250,252,.93)';
+  const P={l:42,r:18,t:18,b:30};
+  const dW=W-P.l-P.r,dH=H-P.t-P.b,MT=100,MF=meta.floors;
+  const tx=t=>P.l+(t/MT)*dW,ty=f=>P.t+dH-((f-1)/(MF-1))*dH;
+  ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=GR;ctx.lineWidth=.5;
+  const fs=MF<=20?5:MF<=30?5:10;
+  for(let f=1;f<=MF;f+=fs){ctx.beginPath();ctx.moveTo(P.l,ty(f));ctx.lineTo(W-P.r,ty(f));ctx.stroke()}
+  for(let t=0;t<=100;t+=10){ctx.beginPath();ctx.moveTo(tx(t),P.t);ctx.lineTo(tx(t),H-P.b);ctx.stroke()}
+  ctx.strokeStyle=AX;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(P.l,P.t);ctx.lineTo(P.l,H-P.b);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,H-P.b);ctx.lineTo(W-P.r,H-P.b);ctx.stroke();
+  ctx.fillStyle=TX;ctx.font='10px ui-monospace,monospace';ctx.textAlign='right';
+  for(let f=1;f<=MF;f+=fs)ctx.fillText(f,P.l-5,ty(f)+3.5);
+  ctx.textAlign='center';
+  for(let t=0;t<=100;t+=10)ctx.fillText(t,tx(t),H-P.b+14);
+  ctx.save();ctx.translate(9,P.t+dH/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';
+  ctx.font='10px system-ui,sans-serif';ctx.fillText('floor',0,0);ctx.restore();
+  ctx.textAlign='center';ctx.fillText('tick →',P.l+dW/2,H-3);
+  sd.eids.forEach(eid=>{
+    const wps=sd.wp[String(eid)];if(!wps||wps.length<2)return;
+    const col=EC[eid%EC.length],idle=wps.every(p=>p.d==='IDLE');
+    ctx.beginPath();ctx.strokeStyle=idle?IC:col;ctx.lineWidth=idle?1:2.5;ctx.setLineDash(idle?[4,4]:[]);
+    wps.forEach((p,i)=>i===0?ctx.moveTo(tx(p.t),ty(p.f)):ctx.lineTo(tx(p.t),ty(p.f)));
+    ctx.stroke();ctx.setLineDash([]);
+  });
+  const lpos=[];
+  function lbl(x,y,text,col){
+    ctx.font='10px system-ui,sans-serif';
+    const tw=ctx.measureText(text).width;
+    let lx=x+8,ly=y;
+    if(lx+tw+6>W-P.r)lx=x-tw-10;
+    for(const lp of lpos){if(Math.abs(lp.x-lx)<tw+8&&Math.abs(lp.y-ly)<13)ly+=13}
+    ctx.fillStyle=LB;ctx.fillRect(lx-2,ly-10,tw+4,13);
+    ctx.fillStyle=col;ctx.fillText(text,lx,ly);lpos.push({x:lx,y:ly});
+  }
+  sd.events.forEach(ev=>{
+    const col=ev.eid!==null?EC[ev.eid%EC.length]:UC;
+    const lab='P'+ev.id.replace(/^p/,'').replace(/passenger/,'');
+    if(ev.status==='never_boarded'){
+      const rx=tx(ev.req),ry=ty(ev.orig);
+      ctx.font='bold 13px system-ui,sans-serif';ctx.fillStyle=col;ctx.textAlign='center';
+      ctx.fillText('✕',rx,ry+4.5);ctx.textAlign='left';lbl(rx,ry,lab+' ✕',col);return;
+    }
+    if(ev.board!==null){
+      const bx=tx(ev.board),by=ty(ev.orig);
+      ctx.beginPath();ctx.arc(bx,by,6,0,Math.PI*2);
+      ctx.strokeStyle=col;ctx.lineWidth=2;ctx.fillStyle=LB;ctx.fill();ctx.stroke();lbl(bx,by,lab+' ↑',col);
+    }
+    if(ev.alight!==null){
+      const ax=tx(ev.alight),ay=ty(ev.dest);
+      ctx.beginPath();ctx.arc(ax,ay,6,0,Math.PI*2);
+      ctx.fillStyle=col;ctx.fill();ctx.strokeStyle=BG;ctx.lineWidth=1.5;ctx.stroke();lbl(ax,ay,lab+' ✓',col);
+    } else if(ev.board!==null){
+      const ax=tx(100),ay=ty(ev.dest);
+      ctx.beginPath();ctx.arc(ax,ay,5,0,Math.PI*2);
+      ctx.setLineDash([3,2]);ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);
+      lbl(ax,ay,lab+' …',col);
+    }
+  });
+}
+
+function showPage(n){
+  document.getElementById('page-1').classList.toggle('page-hidden',n!==1);
+  document.getElementById('page-2').classList.toggle('page-hidden',n!==2);
+  document.getElementById('tab1').classList.toggle('active',n===1);
+  document.getElementById('tab2').classList.toggle('active',n===2);
+  if(n===2)p2Render();
+  if(n===1)drawTraj('p1-traj','baseline','nearest_car');
+}
+
+// Page 1 chart — all 11 scenarios
+const dk=window.matchMedia('(prefers-color-scheme:dark)').matches;
+const tC=dk?'#94a3b8':'#6b7280',gC=dk?'rgba(255,255,255,.07)':'rgba(0,0,0,.07)';
+const sc11=['baseline','scenario_single_elevator','scenario_many_elevators','scenario_capacity_overflow',
+  'scenario_simultaneous_same_floor','scenario_bidirectional','scenario_express_elevator',
+  'scenario_morning_rush','scenario_lunchtime','scenario_townhall','scenario_ceo_visit'];
+const sc11labels=['Baseline','Single elev.','Many elevs.','Cap. overflow','Same floor','Bidirectional','Express',
+  'Morning rush','Lunchtime','Town hall','CEO visit'];
+function avgTotal(sc,al){
+  const evs=DATA[sc].scheds[al].events;
+  const totals=evs.filter(e=>e.alight!==null).map(e=>e.alight-e.req);
+  return totals.length?Math.round(totals.reduce((a,b)=>a+b,0)/totals.length*10)/10:null;
+}
+new Chart(document.getElementById('totalChart'),{
+  type:'bar',
+  data:{labels:sc11labels,
+    datasets:[
+      {label:'Nearest Car',data:sc11.map(s=>avgTotal(s,'nearest_car')),backgroundColor:'#f59e0b',borderRadius:3,borderSkipped:false},
+      {label:'Round Robin',data:sc11.map(s=>avgTotal(s,'round_robin')),backgroundColor:'#3b82f6',borderRadius:3,borderSkipped:false},
+      {label:'Zone Based', data:sc11.map(s=>avgTotal(s,'zone_based')),backgroundColor:'#10b981',borderRadius:3,borderSkipped:false}
+    ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y!=null?c.parsed.y.toFixed(1)+' ticks':'n/a'}`}}},
+    scales:{
+      x:{ticks:{color:tC,font:{size:10},maxRotation:35,minRotation:35},grid:{display:false}},
+      y:{ticks:{color:tC,font:{size:11}},grid:{color:gC},title:{display:true,text:'avg total time (ticks)',color:tC,font:{size:11}}}
+    }}
+});
+
+// Page 2
+const SC_KEYS=Object.keys(DATA);
+let curSc='baseline',curAl='nearest_car';
+const scC=document.getElementById('sc-btns');
+SC_KEYS.forEach(k=>{
+  const b=document.createElement('button');
+  b.className='btn'+(k===curSc?' active-sc':'');
+  b.textContent=DATA[k].meta.label;
+  b.onclick=()=>{curSc=k;refreshSc();p2Render()};
+  scC.appendChild(b);
+});
+const alC=document.getElementById('al-btns');
+AK.forEach(k=>{
+  const b=document.createElement('button');
+  b.className='btn'+(k===curAl?' '+AA[k]:'');
+  b.textContent=AL[k];
+  b.onclick=()=>{curAl=k;refreshAl();p2Render()};
+  alC.appendChild(b);
+});
+function refreshSc(){[...scC.children].forEach((b,i)=>{b.className='btn'+(SC_KEYS[i]===curSc?' active-sc':'')})}
+function refreshAl(){[...alC.children].forEach((b,i)=>{b.className='btn'+(AK[i]===curAl?' '+AA[AK[i]]:'')})}
+
+function p2Render(){
+  const sd=DATA[curSc].scheds[curAl],meta=DATA[curSc].meta;
+  const evs=sd?sd.events:[];
+  const done=evs.filter(e=>e.status==='completed').length;
+  const transit=evs.filter(e=>e.status==='in_transit').length;
+  const missed=evs.filter(e=>e.status==='never_boarded').length;
+  const ef=meta.express_floors||[];
+  document.getElementById('info-bar').innerHTML=
+    '<span class="pill"><strong>'+meta.label+'</strong></span>'+
+    '<span class="pill">'+meta.desc+'</span>'+
+    '<span class="pill">'+AL[curAl]+'</span>'+
+    '<span class="pill"><strong>'+done+'</strong> completed</span>'+
+    (transit?'<span class="pill"><strong>'+transit+'</strong> in transit</span>':'')+
+    (missed?'<span class="pill pill-red"><strong>'+missed+'</strong> never boarded</span>':'');
+  const leg=document.getElementById('elev-legend');
+  if(sd){
+    const active=sd.eids.filter(e=>!sd.wp[String(e)].every(p=>p.d==='IDLE'));
+    const idle=sd.eids.filter(e=>sd.wp[String(e)].every(p=>p.d==='IDLE'));
+    const hasX=evs.some(e=>e.status==='never_boarded');
+    const maxEid=sd.eids.length?Math.max(...sd.eids):null;
+    leg.innerHTML=
+      active.map(e=>{const isEx=ef.length>0&&e===maxEid;return '<div class="leg-item"><div class="leg-line" style="background:'+EC[e%EC.length]+'"></div><span>E'+e+(isEx?' <em style="font-size:10px;color:#94a3b8">[express]</em>':'')+'</span></div>';}).join('')+
+      (idle.length?'<div class="leg-item"><div class="leg-line" style="background:#e2e8f0"></div><span>E'+idle.join('/E')+' — idle all sim</span></div>':'')+
+      '<div class="leg-item"><div class="leg-o"></div><span>boards (↑)</span></div>'+
+      '<div class="leg-item"><div class="leg-f"></div><span>alights (✓)</span></div>'+
+      '<div class="leg-item"><span style="font-size:13px;color:#94a3b8">…</span><span>in transit at t=100</span></div>'+
+      (hasX?'<div class="leg-item"><span style="font-weight:700;color:#94a3b8">✕</span><span>never boarded</span></div>':'');
+  }
+  document.getElementById('pax-tbody').innerHTML=evs.map(ev=>{
+    const wait=ev.board!==null?ev.board-ev.req:'—';
+    const travel=(ev.board!==null&&ev.alight!==null)?ev.alight-ev.board:'—';
+    const total=ev.alight!==null?ev.alight-ev.req:'—';
+    let st,bc;
+    if(ev.status==='completed'){st='Completed';bc='bd'}
+    else if(ev.status==='in_transit'){st='In transit';bc='bt'}
+    else{st='Never boarded';bc='bm'}
+    const col=ev.eid!==null?EC[ev.eid%EC.length]:UC;
+    const lab='P'+ev.id.replace(/^p/,'').replace(/passenger/,'');
+    return '<tr>'+
+      '<td style="font-weight:600;color:'+col+'">'+lab+'</td>'+
+      '<td class="mono">F'+ev.orig+' → F'+ev.dest+'</td>'+
+      (ev.eid!==null?'<td style="font-size:11px;color:'+col+';font-weight:600">E'+ev.eid+'</td>':'<td style="color:#94a3b8">—</td>')+
+      '<td style="font-family:ui-monospace,monospace;font-size:12px">'+ev.req+'</td>'+
+      '<td style="font-family:ui-monospace,monospace;font-size:12px">'+(ev.board!==null?ev.board:'—')+'</td>'+
+      '<td style="font-family:ui-monospace,monospace;font-size:12px">'+(ev.alight!==null?ev.alight:'—')+'</td>'+
+      '<td style="font-family:ui-monospace,monospace;font-size:12px">'+wait+'</td>'+
+      '<td style="font-family:ui-monospace,monospace;font-size:12px">'+travel+'</td>'+
+      '<td style="font-family:ui-monospace,monospace;font-size:12px;font-weight:600">'+total+'</td>'+
+      '<td><span class="badge '+bc+'">'+st+'</span></td>'+
+      '</tr>';
+  }).join('');
+  drawTraj('p2-traj',curSc,curAl);
+}
+window.addEventListener('resize',()=>{
+  if(!document.getElementById('page-2').classList.contains('page-hidden'))drawTraj('p2-traj',curSc,curAl);
+});
+</script>
+</body>
+</html>

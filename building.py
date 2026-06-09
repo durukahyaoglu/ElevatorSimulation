@@ -17,6 +17,12 @@ class Building:
         express_floors: if provided, the last elevator is designated as express and will
                         only accept requests where both origin and destination are in this set.
         """
+        if not isinstance(num_floors, int) or num_floors <= 0:
+            raise ValueError(f"num_floors must be a positive integer, got {num_floors!r}")
+        if not isinstance(num_elevators, int) or num_elevators <= 0:
+            raise ValueError(f"num_elevators must be a positive integer, got {num_elevators!r}")
+        if not isinstance(max_capacity, int) or max_capacity <= 0:
+            raise ValueError(f"max_capacity must be a positive integer, got {max_capacity!r}")
         self.num_floors = num_floors
         self.elevators = []
         for i in range(num_elevators):
