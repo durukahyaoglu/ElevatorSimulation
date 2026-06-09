@@ -2,7 +2,7 @@
 
 A discrete-time simulation of an intelligent **Destination Dispatch** elevator system written in Python. Passengers specify both their origin and destination floor at the time of request, and the scheduler immediately assigns the optimal elevator to minimise total journey time.
 
-> **Interactive results summary:** Open [elevator_simulation_presentation.html](elevator_simulation_presentation.html) in a browser to view key insights, tradeoffs between different scheduling algorithms, scenario breakdowns, and scheduler comparison charts for all simulation runs.
+> **Interactive results summary:** Open [elevator_simulation_presentation.html](https://htmlpreview.github.io/?https://github.com/durukahyaoglu/ElevatorSimulation/blob/main/elevator_simulation_presentation.html) in a browser to view key insights, tradeoffs between different scheduling algorithms, scenario breakdowns, and scheduler comparison charts for all simulation runs.
 
 ---
 
@@ -20,7 +20,7 @@ git clone https://github.com/durukahyaoglu/ElevatorSimulation.git
 cd ElevatorSimulation
 
 # Create and activate a virtual environment
-python -m venv venv           # If you have multiple python versions installed use python3.12 instead
+python -m venv venv           # If you have multiple python versions installed use python3.12 instead - same goes for running the main comment here below
 source venv/bin/activate      # macOS / Linux
 venv\Scripts\activate         # Windows
 
@@ -117,7 +117,7 @@ ElevatorSimulation/
 
 ## Time Spent
 
-~ 10 hours
+~ 14 hours
 
 ---
 
@@ -156,7 +156,7 @@ ElevatorSimulation/
 
 3. **Fairness vs. efficiency trade-off.** The current cost function optimises purely for `wait + travel`. A fairness-weighted objective (e.g. cap max wait time at N ticks, then prioritise longest-waiting passenger) would prevent stragglers in high-traffic scenarios.
 
-4. **More realistic benchmarking.** Generate large randomised request sets with realistic traffic patterns (morning peak up, evening peak down, midday random) to stress-test the scheduler at scale.
+4. **More realistic benchmarking.** Generate large randomised request sets with realistic traffic patterns (morning peak up, evening peak down, midday random) to stress-test the scheduler at scale. We have these scenarios currently but in a smaller scale.
 
 5. **Look-ahead batch scheduling.** All three algorithms here are greedy (assign at request time, no re-optimisation). A batch scheduler — e.g. solve an assignment problem every N ticks — could reduce total system cost, at the expense of increased latency to assignment.
 
@@ -336,3 +336,17 @@ Three schedulers are compared across all scenarios. A formatted PDF report is av
 | Utilization | E0: 42%, E1: 16%, E2: 29% | E0: 79%, E1: 77%, E2: 24% | E0: 100% |
 
 > Nearest Car is the clear winner — the express elevator (E2) is immediately filled with the CEO and 3 executives at t=0, while E0/E1 handle the 12 regular employees in parallel. All 16 complete with only 3.8 ticks avg wait. Zone Based is the worst (12/16, 43 ticks avg wait) because all passengers start from floor 1 (E0's zone), starving E1 and E2 of assignments.
+
+---
+
+## AI Use
+
+Claude (Anthropic) was used as a coding assistant throughout this project. Specific areas where AI assistance was applied:
+
+- **Test case design** — generating the `TestSchedulerBehavior`, `TestSimulationInvariants`, and `TestRegressionScenarios` test classes, including edge cases and parametrized regression tests across all scenarios and schedulers.
+- **Scenario runner infrastructure** — building the `main.py` logic to run multiple scenarios and schedulers in a loop, collect results, and write per-scheduler output files.
+- **Code quality and documentation** — converting working prototype code into well-commented, industry-standard Python with clear docstrings, type hints, and consistent naming conventions.
+- **Input generation** — creating the input CSV files for all scenarios (baseline, capacity overflow, express elevator, morning rush, lunchtime, townhall, CEO visit, etc.).
+- **Visualizations** — generating the HTML presentation file with scenario breakdowns and scheduler comparison charts.
+- **README formatting** — structuring and writing this README, including the comparison tables, observations, trade-off table, and assumptions section.
+- **Code comments** — adding inline comments to clarify non-obvious logic such as the SCAN algorithm, zone-based fallback behaviour, and the two-layer express elevator design.
